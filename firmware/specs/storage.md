@@ -44,6 +44,14 @@ for recording identity or metadata.
   result, recover by scanning existing `rec-*` directories and choosing `max + 1`.
 - The SD-card scan remains authoritative for existing recordings.
 
+### ID display form
+
+The on-disk identity is the full 6-digit `rec-NNNNNN`. The UI shows the
+human-readable short form **`REC NNN`** — uppercase, space-separated, with the
+`rec-` prefix dropped and leading zeros trimmed to at least three digits (e.g.
+`rec-000012 → "REC 012"`, `rec-001234 → "REC 1234"`). The short form is for
+display only; the full directory name remains the stable identity.
+
 ## Files
 
 ### `session.wav`
@@ -70,7 +78,10 @@ label_duration_sec=<seconds>
 ### `label.wav`
 
 Optional short spoken label used to identify the recording. It uses the same WAV
-encoding as `session.wav` unless a later spec changes label encoding.
+encoding as `session.wav` unless a later spec changes label encoding. There is no
+maximum label duration. The same ~1000-byte validity floor as `session.wav`
+applies: a label capture below the floor is discarded and leaves any prior
+`label.wav` untouched.
 
 ## Labels and relabeling
 
@@ -97,6 +108,20 @@ A directory is a valid recording only if it contains:
 `label.wav` is optional. Invalid, partial, or corrupt directories are ignored so
 interrupted captures are self-healing.
 
+Each cached list entry records whether a valid `label.wav` is present, so the
+list can render a **has-label** marker (speaker glyph) next to the ID.
+
+### Counts and the 16-note cache
+
+Two distinct counts are displayed:
+
+- **IDLE `CLIPS`** is the full count of valid recordings on the card, which may
+  exceed 16.
+- The list's **`X OF Y`** position operates over the **browsable cached window**:
+  `Y = min(total valid notes, 16)` and `X` is the 1-based selection within it.
+  When more than 16 notes exist, the list browses the newest 16; `CLIPS` and the
+  list's `Y` will then differ, by design.
+
 ## Commit and delete
 
 A capture is committed only after:
@@ -110,3 +135,7 @@ their directories removed.
 
 Deleting a note removes its entire recording directory, including `session.wav`,
 `session.meta`, and optional `label.wav`.
+
+The `DELETE_CONFIRM` screen shows the note's ID, duration, and **size**. Duration
+comes from `session.meta` (`duration_sec`); size is **derived** from the
+`session.wav` file length at confirm time — it is not stored in metadata.

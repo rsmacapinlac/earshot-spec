@@ -48,6 +48,26 @@ speaker), so there is no stereo capture. The codec hardware details (config, I²
 - **Stop control:** polled mid-stream; a button press ends playback early.
 - **Guard:** files of ≤ 44 bytes (header only, no audio) are rejected.
 
+## Duration display format
+
+Durations are rendered two ways, by context:
+
+- **Live timers** — RECORDING, LABEL_CAPTURE, PLAYBACK (elapsed/countdown), and
+  the DELETE_CONFIRM duration field — use full **`HH:MM:SS`** (e.g. `00:02:34`).
+- **List durations** — the `RECORDINGS_LIST` per-note duration — use the compact
+  **`M:SS`** form (e.g. `2:34`, `0:48`), no leading hour field.
+
+Both derive from `duration_sec` / live elapsed seconds; the compact list form is
+display-only and does not change stored metadata.
+
+## Activity indicator (RECORDING / LABEL_CAPTURE)
+
+The animated bars drawn during capture are a **decorative activity indicator**,
+not a calibrated input-level meter. v1 does not require codec RMS/level metering;
+the indicator may animate from input energy if cheap, but a simple looping
+animation satisfies the contract. (Whether to invert the live treatment further
+is **UX-4**.)
+
 > Open technical decisions from this spec are centralized in
 > `../requirements/open-technical-decisions.md`: the down-mix method (**TD-2**) and the
 > 16 kHz / 16-bit quality ceiling (**TD-3**). Mono is a hardware limit, not a
