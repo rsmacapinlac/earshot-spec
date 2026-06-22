@@ -1,4 +1,4 @@
-# 0009 — Button Input Handling via OneButton
+# 0004 — Button Input Handling via OneButton
 
 **Status:** Accepted (ratifies the prototype's dependency)
 
@@ -15,7 +15,7 @@ distinguished per the device spec's thresholds:
 | double press window   | 200 ms |
 
 The same physical buttons are also the EXT1/GPIO wake source out of sleep
-(ADR 0006), so runtime detection only has to cover the awake states. The
+so runtime detection only has to cover the awake states. The
 prototype already uses the **OneButton** library (2.6.2) for this; the
 interactive design prototype hand-rolled an equivalent detector (`makePresser`).
 
@@ -33,7 +33,7 @@ than a hand-rolled GPIO state machine.
 - Poll both instances from the core-1 loop `tick()` (ADR 0002); the existing
   1 ms loop cadence is well inside the detector's timing needs.
 - Keep button handling behind the `app` layer — OneButton callbacks dispatch
-  into the state machine, which owns all transitions (`../requirements/state-machine.md`).
+  into the state machine, which owns all transitions (`../specs/state-machine.md`).
 
 ## Consequences
 

@@ -3,8 +3,8 @@
 The canonical behavioural spec for earshot: the five core states, their
 transitions, the condition/interrupt screens, and what each button does in each.
 This was previously captured only in the design chat and split across two
-prototypes that had drifted; this document is the single source of truth. Screen
-*layout* lives in `ui-screens.md`.
+prototypes that had drifted; this document is the single source of truth for
+behavior.
 
 ## Buttons
 
@@ -28,7 +28,7 @@ Press detection (from the device spec):
 
 The reference firmware uses a **350 ms** short-press debounce. Single/long/double
 detection is delegated to the **OneButton** library, configured to these
-thresholds — see `../adr/0009-button-input-handling.md`.
+thresholds — see `../adr/0004-button-input-handling.md`.
 
 ## States
 
@@ -36,8 +36,7 @@ Five logical states form the navigable flow below. Separately, a set of
 **condition screens** (low battery, no SD, sleep, …) are raised by hardware
 events rather than button navigation — see "Condition & interrupt screens".
 
-`LIST` has a distinct **empty** presentation, so there are six core screens (see
-`ui-screens.md`).
+`LIST` has a distinct **empty** presentation, so there are six core screens.
 
 | State          | Activity level    | Purpose |
 | -------------- | ----------------- | ------- |
@@ -49,7 +48,7 @@ events rather than button navigation — see "Condition & interrupt screens".
 
 ## Transition table
 
-| From | Button + press | To / effect |
+| From | Catalyst | To / effect |
 | ---- | -------------- | ----------- |
 | **IDLE** | PWR double | RECORDING (start capture, elapsed = 0) |
 | **IDLE** | BOOT double | RECORDINGS_LIST (listIndex = 0) |
@@ -60,41 +59,17 @@ events rather than button navigation — see "Condition & interrupt screens".
 | **RECORDINGS_LIST** (non-empty) | PWR short | PLAYBACK of selected (elapsed = 0) |
 | **RECORDINGS_LIST** (non-empty) | PWR long | DELETE_CONFIRM |
 | **RECORDINGS_LIST** (empty) | BOOT long | exit → IDLE |
+| **RECORDINGS_LIST** (empty) | PWR short | exit → IDLE |
 | **DELETE_CONFIRM** | PWR short | delete selected → RECORDINGS_LIST |
 | **DELETE_CONFIRM** | BOOT short | cancel → RECORDINGS_LIST |
-| **PLAYBACK** | PWR short | stop → IDLE |
-| **PLAYBACK** | playback reaches end | auto-finish → IDLE |
+| **PLAYBACK** | PWR short | stop → RECORDINGS_LIST |
+| **PLAYBACK** | playback reaches end | auto-finish → RECORDINGS_LIST |
 
-### Global rule
-
-The original spec proposed a global escape hatch: **PWR long-press returns to
-IDLE from any state except RECORDING** (RECORDING excepted so a long PWR can't
-abandon a take; in RECORDINGS_LIST the state-specific `PWR long → DELETE_CONFIRM`
-would override it).
-
-**This is currently an open UX question, not settled behaviour** — tracked as
-**UX-1** in `open-ux-questions.md`. The three sources disagree on how far it
-reaches, and we've deliberately left it unresolved until the interaction is
-decided.
-
-## Resolved divergences (canon for the firmware)
-
-Three sources disagreed; the firmware follows the column marked **Canon**.
-
-| Behaviour | Original spec | JSX prototype | C++ prototype | **Canon** |
-| --------- | ------------- | ------------- | ------------- | --------- |
-| Save during RECORDING | BOOT short | PWR short | PWR short | **PWR short = save; BOOT short = cancel/discard** |
-| Global PWR-long → IDLE | yes (except REC) | yes (PLAY/DELETE) | partial (missing) | **Open UX question** (UX-1) |
-| PLAYBACK + BOOT short | → IDLE | → IDLE | no-op | **No-op** — PLAYBACK hint shows BOOT as `-`; only PWR stops |
-
-The "Canon" column reflects the final on-screen hints the user approved in
-design, with behaviour made to match the hints. Implementations that change a
-hint must change the matching transition here too.
 
 ## Empty-list behaviour
 
-- Entering RECORDINGS_LIST with zero notes shows the empty screen; only
-  `BOOT long → IDLE` is offered.
+- Entering RECORDINGS_LIST with zero notes shows the empty screen. `BOOT long → IDLE`
+  is the displayed hint; `PWR short → IDLE` is also accepted as a harmless OK/exit path.
 - Deleting the **last** remaining note returns to RECORDINGS_LIST in its empty
   presentation (not to IDLE). Deleting with notes remaining keeps the list and
   clamps the selection to a valid index.
@@ -104,36 +79,38 @@ hint must change the matching transition here too.
 These screens are raised by **hardware/system conditions**, not by navigating the
 flow above. They are interrupts: an advisory one overlays and returns you where
 you were; a blocking one prevents the action and drops to IDLE. Layouts are in
-the design (`ui-screens.md`); rationale in `../adr/0008-edge-and-error-state-ui.md`.
+the design.
+CHARGING is currently a reserved/renderable condition only: the firmware has no
+charger-present detector wired, so it is not auto-raised in normal operation.
 
 | Screen | Raised when | Kind | Action → result |
 | ------ | ----------- | ---- | --------------- |
-| LOW BATTERY | charge crosses ≤ 15% | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues |
-| CHARGING | charger connected | advisory | PWR dismiss → return to prior screen |
+| LOW BATTERY | battery state enters LOW | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues |
+| CRITICAL BATTERY | battery state enters CRITICAL; new recording is blocked, or active recording was gracefully stopped/saved | blocking | PWR `OK` → IDLE |
+| CHARGING | reserved for charger-present detection; current firmware has no hardware signal/API wired | advisory when raised by test/future detector | PWR dismiss → return to prior screen |
 | NO SD CARD | card absent / unreadable | blocking | BOOT `exit (hold)` → IDLE |
-| STORAGE FULL | no space to record | blocking | PWR `OK` → IDLE (in-progress note stopped and kept) |
-| TIME NOT SET | RTC stopped / never set | mild | PWR `continue` → IDLE; recording allowed, timestamps unset |
-| SLEEP | 120 s inactivity (from IDLE) | transient | any button → wake to IDLE |
+| STORAGE FULL | new recording cannot be created or started because storage is unavailable/full | blocking | PWR `OK` → IDLE |
+| SLEEP | 120 s inactivity | transient | any button will wake to IDLE |
 
 Notes:
 
 - **Advisory screens don't abort the current activity** — dismissing LOW BATTERY
   during RECORDING returns to the live recording, not IDLE.
+- CRITICAL BATTERY is blocking. If it happens during recording, firmware should
+  first attempt graceful stop/save, then raise the blocking condition.
 - LOW BATTERY / CHARGING currently require a keypress to dismiss. Whether they
   should **auto-return** after a moment instead is **UX-7** in
-  `open-ux-questions.md`.
+  `../requirements/open-ux-questions.md`.
 - These interrupts are independent of the core transition table and the UX-1
   global-rule question.
 
 ## Power interaction
 
-earshot **boots directly into IDLE** — there is no splash/boot screen in v1 (see
-`ui-screens.md`). IDLE is the only state that sleeps: after **120 s** of
-inactivity the device enters light-sleep (v1; see
-`../adr/0006-power-and-sleep-model.md`), drawing the SLEEP screen first. Any
+earshot **boots directly into IDLE** — there is no splash/boot screen in v1. IDLE
+is the only state that sleeps: after **120 s** of
+inactivity the device enters light-sleep, drawing the SLEEP screen first. Any
 button wakes it back to IDLE. Activity in any active state resets the inactivity
 timer. The exact sleep depth (light vs deep) is provisional pending battery
 testing.
 
-See also `ui-screens.md`, `time-power-spec.md`, and
-`../adr/0006-power-and-sleep-model.md`.
+See also `power-sleep.md`.

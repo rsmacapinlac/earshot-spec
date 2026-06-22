@@ -4,44 +4,34 @@
 
 ## Context
 
-Audio is the highest-risk subsystem and the one with the least existing code:
-`../requirements/recording-playback-spec.md` documents the format and capture rules, but notes
-that the reference firmware's codec/I²S BSP is **not vendored** into earshot. The
-board uses a single **ES8311** mono codec for both mic input and speaker output
-(I²C control on the shared bus at 0x18; PA enable on GPIO46; I²S on the pins in
-`../reference/hardware-pinout.md`). Three implementation routes exist: lift the reference
-BSP, adopt ESP-ADF, or hand-roll it.
+The target board uses a single **ES8311** mono codec for both microphone input
+and speaker output. The reference firmware's codec/I²S BSP is not vendored into
+earshot. The audio format, I²S transport details, WAV behavior, and playback
+contract are specified in `../specs/recording-playback.md`.
+
+Three implementation routes were considered: port the reference BSP, adopt
+ESP-ADF, or hand-roll the small amount of codec/I²S setup needed by earshot.
 
 ## Decision
 
-Drive audio with the **ESP-IDF `driver/i2s` API directly, plus manual ES8311
-register init over the existing I²C** — no ESP-ADF, no opaque BSP.
+Drive audio with the ESP-IDF I²S driver directly and manual ES8311 register
+initialization over the shared I²C bus — no ESP-ADF and no opaque board BSP.
 
-- Bring up I²S in standard mode, 16 kHz, 16-bit, 2-channel slots (the codec link
-  is 2-channel even though the mic is mono).
-- Manually configure ES8311 registers for capture (input gain 45.0) and playback
-  (out vol 85 active / 0 idle), toggling PA on GPIO46 and the audio power rail on
-  GPIO42.
-- **Capture:** read the stereo buffer, down-mix to mono by keeping the **left**
-  slot, stream to a WAV file (44 zero bytes first, backfill the header on stop).
-- **Playback:** skip the 44-byte header, read mono in 1024-byte chunks, duplicate
-  each sample to L+R for the 2-channel DAC path. Poll a stop flag mid-stream.
-- Encapsulate all of this behind a small `audio` service (`begin/recordTo/play/
-  stop`) so the state machine never touches I²S/registers directly.
+Keep codec/I²S details behind a small audio service so the app state machine does
+not touch registers, DMA, WAV headers, or raw I²S buffers directly.
 
 ## Consequences
 
-- Maximum control and the most learning; no framework lock-in or BSP black box.
-- **Most code to get right** — ES8311 register sequencing and I²S clocking are
-  the likeliest source of bring-up iteration. Budget hardware debugging here.
-- The codec lives on the shared I²C bus (ADR 0002) alongside the RTC and SHTC3;
-  init order and bus arbitration must be handled.
-- Format choices (16 kHz/16-bit/mono) are fixed for v1 per the spec; raising them
-  later is a localized change in the `audio` service.
+- Maximum control and no framework lock-in.
+- ES8311 register sequencing and I²S clocking remain likely bring-up/debug areas.
+- The codec shares the board I²C bus, so initialization and bus ownership must be
+  coordinated with other I²C users.
+- Audio format changes should be localized to the audio service and
+  `../specs/recording-playback.md`.
 
 ## Alternatives
 
-- **Port the reference BSP** — fastest to known-good, but the BSP isn't vendored,
-  hides the learning, and drags in its abstractions.
+- **Port the reference BSP** — fastest path to known-good behavior, but hides the
+  learning, adds opaque abstractions, and is not vendored here.
 - **ESP-ADF** — batteries-included pipelines, but heavy, a different build setup
   than the current sketch flow, and overkill for one mono codec.

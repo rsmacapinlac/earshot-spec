@@ -40,7 +40,7 @@ control is different: it is the board's software power-hold latch.
 
 | Signal      | GPIO | Notes                                          |
 | ----------- | ---- | ---------------------------------------------- |
-| Battery ADC | 4    | ADC1_CH3, `ADC_11db`, ×2 divider (see time-power-spec) |
+| Battery ADC | 4    | ADC1_CH3, `ADC_11db`, ×2 divider (see `../specs/power-sleep.md`) |
 
 ## I²C bus (shared)
 
@@ -81,5 +81,5 @@ Devices on the bus:
 EXT1 wake on **GPIO0 (BOOT/REC)** and **GPIO18 (PWR)**,
 `ESP_EXT1_WAKEUP_ANY_LOW` — any button press wakes the device.
 
-See also `docs/requirements/recording-playback-spec.md` and
-`docs/requirements/time-power-spec.md`.
+See also `../specs/recording-playback.md` and
+`../specs/power-sleep.md`.

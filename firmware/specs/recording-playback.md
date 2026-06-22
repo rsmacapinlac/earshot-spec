@@ -1,15 +1,11 @@
 # Recording & Playback Spec
 
-Audio capture and playback requirements for earshot, extracted from the
-reference firmware. These are the specs a compatible implementation must honor
-when real audio is wired into earshot.
+Audio capture and playback contract for earshot.
 
 ## Hardware constraint — mono only
 
 Capture is **mono** — the board has a single ES8311 codec (one mic, one
-speaker), so there is no stereo capture. Don't design for stereo on this board.
-The codec hardware details (config, I²S, the multi-mic caveat) are in the board
-reference: `../reference/audio-codec-es8311.md`.
+speaker), so there is no stereo capture. The codec hardware details (config, I²S, the multi-mic caveat) are in the board reference: `../reference/audio-codec-es8311.md`.
 
 ## Audio format
 
@@ -23,21 +19,24 @@ reference: `../reference/audio-codec-es8311.md`.
 
 ## Recording
 
-- **Codec capture:** opened as 16 kHz, **2-channel**, 16-bit; input gain 45.0.
-- **Down-mix to mono:** keep the **left** channel only (`mbuf[i] = sbuf[i*2]`).
-  The right channel is a duplicate of the same mic and is discarded.
+- **Codec capture:** opened as 16 kHz, **2-channel I²S**, with 32-bit slots
+  carrying 16-bit audio in the MSB position; input gain 45.0.
+- **Down-mix to mono:** keep the **left** slot only, converting each 32-bit slot
+  to stored 16-bit PCM by shifting down from the MSB position. The right channel
+  is a duplicate of the same mic and is discarded.
 - **WAV header:** write 44 zero bytes first, stream PCM data, then `seek(0)` and
   back-fill the header once the length is known. Header fields:
   - `audioFormat = 1` (PCM), `channels = 1`, `sampleRate = 16000`
   - `byteRate = 32000` (sampleRate × blockAlign), `blockAlign = 2`
   - `bitsPerSample = 16`
-- **Capture buffer:** 8 KB stereo read buffer, 4 KB mono write buffer
-  (`REC_BUF = 8 * 1024`), allocated from heap.
-- **File naming:** one directory per recording named with the UTC capture time,
-  `/recordings/<YYYYMMDDTHHMMSS>/session.wav` (e.g.
-  `/recordings/20260618T091500/session.wav`); duration is stored beside it in
-  `session.meta`. See ADR 0004 for the full layout (and the `unset-NNN` fallback
-  when the clock is not yet set).
+- **Capture buffer:** 8 KB stereo I²S read buffer, allocated from heap. Because
+  the link uses 32-bit stereo slots, each 8 KB read yields about 2 KB of stored
+  16-bit mono PCM after keeping the left slot.
+- **File naming:** one ID-named directory per recording,
+  `/recordings/rec-NNNNNN/session.wav` (e.g.
+  `/recordings/rec-000042/session.wav`); duration is stored beside it in
+  `session.meta`. Optional voice labels are stored as `label.wav`. See
+  `storage.md` for the full layout.
 - **Validity floor:** a recording shorter than ~1000 bytes is discarded.
 
 ## Playback
@@ -50,9 +49,9 @@ reference: `../reference/audio-codec-es8311.md`.
 - **Guard:** files of ≤ 44 bytes (header only, no audio) are rejected.
 
 > Open technical decisions from this spec are centralized in
-> `open-technical-decisions.md`: the down-mix method (**TD-2**) and the
+> `../requirements/open-technical-decisions.md`: the down-mix method (**TD-2**) and the
 > 16 kHz / 16-bit quality ceiling (**TD-3**). Mono is a hardware limit, not a
 > choice (see "Hardware constraint — mono only" above).
 
-See also `docs/reference/device-rendering-constraints.md` and
-`docs/requirements/non-functional.md`.
+See also `../reference/device-rendering-constraints.md` and
+`../requirements/non-functional.md`.

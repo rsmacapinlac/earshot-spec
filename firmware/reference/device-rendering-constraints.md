@@ -1,8 +1,7 @@
 # earshot — Device Rendering Constraints
 
 Hardware constraints for the earshot UI, derived from actually rendering the
-screens on the Waveshare ESP32-S3 1.54" e-Paper panel (not theory). Intended to be passed back to
-Claude Design so mockups stay faithful to what the device can render.
+screens on the Waveshare ESP32-S3 1.54" e-Paper panel. 
 
 **Panel:** 200×200 px, 1-bit. Pure black or pure white only; "gray" is
 impossible (1-bit dither at best).

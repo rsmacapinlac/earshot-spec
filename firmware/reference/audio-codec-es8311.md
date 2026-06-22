@@ -1,8 +1,8 @@
 # ES8311 Audio Codec — Hardware Reference
 
 Hardware facts about the board's audio codec, for the audio implementation. For
-capture/playback *requirements* (format, down-mix, WAV handling) see
-`../requirements/recording-playback-spec.md`; for the driver decision see
+capture/playback spec (format, down-mix, WAV handling) see
+`../specs/recording-playback.md`; for the driver decision see
 `../adr/0003-audio-subsystem.md`.
 
 The board — **Waveshare ESP32-S3 1.54" e-Paper** (codec board id

@@ -1,10 +1,6 @@
 # PCF85063 RTC — Register Reference
 
-Reimplementation reference for the on-board **PCF85063** real-time clock. The
-reference firmware used a board I²C BSP that is **not** vendored into earshot, so
-the raw register protocol is captured here. For the timekeeping *policy* (UTC
-storage, configurable local offset, NTP, validity handling) see
-`../requirements/time-power-spec.md` and `../adr/0005-time-model.md`.
+Reference for the on-board **PCF85063** real-time clock.
 
 - **Bus / address:** I²C (`I2C_NUM_0`) at **0x51** (see `hardware-pinout.md`).
 - **Encoding:** all time registers are **BCD**.
@@ -29,4 +25,4 @@ Time is one 7-byte block starting at `0x04`:
 - **Epoch:** set `TZ=UTC0`, `tzset()`, then `mktime()`; a synced clock is
   sanity-checked as `epoch >= 1700000000`.
 
-See also `hardware-pinout.md` (I²C bus) and `../requirements/time-power-spec.md`.
+See also `hardware-pinout.md` (I²C bus).

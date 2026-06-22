@@ -1,73 +1,41 @@
-# earshot — Requirements
+# earshot — Product Requirements
 
-earshot is custom firmware for a small, battery-powered, two-button, 1-bit
-e-paper **voice-note recorder**, built on the Waveshare ESP32-S3 1.54" e-Paper
-board (`S3_ePaper_1_54`, ESP32-S3-PICO-1). It records mono voice notes to an SD
-card, timestamps them from an on-board RTC, and lets you browse, play, and
-delete them with two physical buttons — all rendered as static, high-contrast
-1-bit screens.
+earshot is custom firmware for a pocket e-paper **voice-note recorder** built on
+the Waveshare ESP32-S3 1.54" e-Paper board (`S3_ePaper_1_54`, ESP32-S3-PICO-1).
 
-The visual design is a finished handoff from Claude Design; the firmware under
-`earshot/` today is a **UX-only prototype** (fake recordings, simulated timers,
-no real subsystems) used to validate the screen flow on real hardware. It is
-fully reworkable. These documents define what the *real* firmware must do.
+This directory captures product and quality requirements: what the device must do
+and what constraints matter to users. Exact implementation contracts live in
+`../specs/`; rationale for major choices lives in `../adr/`.
 
-## v1 scope (MVP)
+## v1 scope
 
-A **standalone device** — that nonetheless lays the architectural foundations for a future sync path.
+A standalone offline recorder that lays the foundation for future BLE sync.
 
-In scope for v1:
+v1 must let the user:
 
-- The five-state recorder UX (see `state-machine.md`, `ui-screens.md`).
-- Real audio capture + playback via the ES8311 codec (`recording-playback-spec.md`).
-- SD-card storage with per-note metadata; the list is built by scanning the card.
-- RTC timekeeping; UTC stored, local time shown via a configurable offset.
-- Battery sensing with a low-battery warning.
-- Light-sleep after 120 s of inactivity to conserve battery.
-- The edge/error screens the hardware brief implies (no-SD, low-battery, etc.).
+- record mono voice notes to an SD card;
+- identify recordings by stable recording ID and optional spoken label, without
+  needing date/time setup;
+- browse, play, and delete recordings;
+- receive clear no-SD, storage-full, sleep, charging, and low-battery feedback;
 
-Explicitly **out** of v1, but designed-for:
+Explicitly out of v1, but designed-for:
 
-- **BLE file sync** to a future iPhone/Android companion app. This is the
-  intended connectivity direction (not a WiFi web "portal" the design tokens
-  reference). v1 ships a transfer/sync *seam*, not the feature — see
-  `../adr/0007-connectivity-and-sync-seam.md`.
-- WiFi upload, server-side transcription, and any web UI.
-- Audio (WiFi) NTP sync — the RTC is set manually in v1; the time model is built
-  so NTP can slot in later (`../adr/0005-time-model.md`).
+- BLE file sync to a future iPhone/Android companion app. v1 ships a transfer
+  seam, not the feature.
 
-## Document map
+## Requirement documents
 
-**Product & behaviour**
+- `non-functional.md` — battery, responsiveness, durability, storage, and other
+  cross-cutting quality requirements.
+- `open-ux-questions.md` — deferred interaction/UX decisions.
+- `open-technical-decisions.md` — deferred engineering decisions.
 
-- `state-machine.md` — canonical states, transitions, button semantics, global rules.
-- `ui-screens.md` — pointer to the canonical screen designs in Claude Design, plus what they don't yet cover.
-- `open-ux-questions.md` — central registry of deferred interaction/UX decisions (UX-n).
-- `open-technical-decisions.md` — central registry of deferred engineering decisions (TD-n).
-- `non-functional.md` — battery, responsiveness, durability, storage, and other NFRs.
-- `acceptance-criteria.md` — pass/fail, provisional, and blocked criteria for implementation readiness.
+## Related implementation specs
 
-**Subsystem specs** (obligations a compatible implementation must honor)
+- `../specs/README.md` — index of precise firmware behavior/contracts.
 
-- `recording-playback-spec.md` — audio format, capture, and playback rules.
-- `time-power-spec.md` — RTC, battery, power rails, and sleep specifics.
-- `boot-configuration.md` — SD-card boot config for local offset and manual RTC bootstrap.
+## Related references and decisions
 
-**Board reference** — descriptive board/panel facts, not requirements; in `../reference/`:
-
-- `../reference/hardware-pinout.md` — complete GPIO map for the board.
-- `../reference/device-rendering-constraints.md` — what the 1-bit GFX panel can actually render.
-- `../reference/rtc-pcf85063.md` — PCF85063 RTC register protocol.
-- `../reference/audio-codec-es8311.md` — ES8311 mono codec hardware facts.
-
-**Decisions** — architecture decision records live in `../adr/`; start at
-`../adr/README.md`.
-
-## Status of the requirements
-
-The hardware/subsystem specs were extracted from the reference firmware and are
-considered stable. The behaviour docs (`state-machine.md`, `ui-screens.md`)
-reconcile three sources that had drifted — the user's original state-machine
-spec, the interactive prototype (`scribr_app.jsx`), and the on-device prototype
-(`screens.cpp`) — and record the resolved canonical behaviour. The edge-state
-screens still need a 1-bit design pass.
+- `../reference/` — board/panel facts and hardware references.
+- `../adr/README.md` — architecture decision records and rationale.
