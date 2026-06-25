@@ -48,6 +48,23 @@ speaker), so there is no stereo capture. The codec hardware details (config, I²
 - **Stop control:** polled mid-stream; a button press ends playback early.
 - **Guard:** files of ≤ 44 bytes (header only, no audio) are rejected.
 
+### Label-first playback
+
+Playing a note from `RECORDINGS_LIST` plays its **spoken label first, then the
+recording**, as one continuous playback:
+
+- If the note has a valid `label.wav`, it plays first; when it reaches its end the
+  firmware hands off automatically into `session.wav`. There is no pause between
+  the two segments beyond the codec re-arm.
+- A note with no label plays `session.wav` directly.
+- The two segments are independent files (`storage.md`), not a concatenated
+  stream. The label segment is identified in the UI (speaker glyph) and the
+  PLAYBACK progress bar is scaled to the **active segment's** duration
+  (`label_duration_sec` during the label, `duration_sec` during the recording).
+- Stopping (`PWR`) or relabel (`BOOT`) during either segment ends playback; the
+  end-of-recording auto-finish only fires after the recording segment.
+- If the label fails to open, fall back to playing the recording directly.
+
 ## Duration display format
 
 Durations are rendered two ways, by context:

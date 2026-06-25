@@ -16,8 +16,9 @@ broader NFR notes."
 - Battery UX and policy must be based on coarse states, not precise percentage:
   OK, LOW, and CRITICAL.
 - LOW battery warns the user but must not abort an active recording.
-- CRITICAL battery must protect recordings: block new recording, and if reached
-  during recording, attempt graceful stop/save before showing a blocking warning.
+- CRITICAL battery must protect recordings and conserve remaining charge: stop and
+  save any active capture, block further activity, show the warning, and drop to the
+  lowest-power sleep — rather than continuing to drain.
 - Battery readings must be filtered/hysteretic enough to avoid false state
   changes from brief load sag during audio, SD writes, or display refresh.
 - The device is powered only while software holds the VBAT latch; the firmware

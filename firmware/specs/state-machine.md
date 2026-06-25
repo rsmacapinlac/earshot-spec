@@ -85,7 +85,7 @@ existing note (`PLAYBACK → LABEL_CAPTURE`).
 | **LABEL_CAPTURE** | BOOT short | `CANCEL` → keep any prior label → return to caller |
 | **RECORDINGS_LIST** (non-empty) | BOOT short | advance selection (wraps) |
 | **RECORDINGS_LIST** (non-empty) | BOOT long | exit → IDLE |
-| **RECORDINGS_LIST** (non-empty) | PWR short | PLAYBACK of selected (elapsed = 0) |
+| **RECORDINGS_LIST** (non-empty) | PWR short | PLAYBACK of selected (elapsed = 0); a labelled note plays its label first, then the recording — see `recording-playback.md` → "Label-first playback" |
 | **RECORDINGS_LIST** (non-empty) | PWR long | DELETE_CONFIRM |
 | **RECORDINGS_LIST** (empty) | BOOT long | exit → IDLE |
 | **RECORDINGS_LIST** (empty) | PWR short | exit → IDLE |
@@ -93,7 +93,8 @@ existing note (`PLAYBACK → LABEL_CAPTURE`).
 | **DELETE_CONFIRM** | BOOT short | cancel → RECORDINGS_LIST |
 | **PLAYBACK** | BOOT short | `RELABEL` → stop playback → LABEL_CAPTURE (relabel this note) |
 | **PLAYBACK** | PWR short | stop → RECORDINGS_LIST |
-| **PLAYBACK** | playback reaches end | auto-finish → RECORDINGS_LIST |
+| **PLAYBACK** | label segment reaches end | auto-continue into the recording segment (labelled notes only) |
+| **PLAYBACK** | recording reaches end | auto-finish → RECORDINGS_LIST |
 
 ### LABEL_CAPTURE caller / return target
 
@@ -124,8 +125,8 @@ charger-present detector wired, so it is not auto-raised in normal operation.
 
 | Screen | Raised when | Kind | Action → result |
 | ------ | ----------- | ---- | --------------- |
-| LOW BATTERY | battery state enters LOW | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues |
-| CRITICAL BATTERY | battery state enters CRITICAL; new recording is blocked, or active recording was gracefully stopped/saved | blocking | PWR `OK` → IDLE |
+| LOW BATTERY | battery state enters LOW (once, on OK→LOW) | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues (SLEEP exception below: dismiss → IDLE) |
+| CRITICAL BATTERY | battery enters CRITICAL (once, on OK→CRITICAL or LOW→CRITICAL) | blocking — saves, warns, then deep-sleeps (latch held) | no dismiss: auto-enters deepest sleep; button wake re-checks battery, returns to IDLE only on recovery ≥10% (see note) |
 | CHARGING | reserved for charger-present detection; current firmware has no hardware signal/API wired | advisory when raised by test/future detector | PWR dismiss → return to prior screen |
 | NO SD CARD | card absent / unreadable | blocking | BOOT `exit (hold)` → IDLE |
 | STORAGE FULL | new recording cannot be created or started because storage is unavailable/full | blocking | PWR `OK` → IDLE |
@@ -135,8 +136,28 @@ Notes:
 
 - **Advisory screens don't abort the current activity** — dismissing LOW BATTERY
   during RECORDING returns to the live recording, not IDLE.
-- CRITICAL BATTERY is blocking. If it happens during recording, firmware should
-  first attempt graceful stop/save, then raise the blocking condition.
+- **LOW BATTERY is edge-triggered** — it is raised once on the OK→LOW transition,
+  not continuously while LOW. Navigating between screens does not re-raise it.
+- **SLEEP is the exception to "return to prior screen."** If the OK→LOW
+  transition occurs while the device is in SLEEP, LOW BATTERY **takes over** the
+  sleep screen and wakes the display. Dismissing it (PWR) goes to **IDLE**, not
+  back to sleep; the 120 s inactivity timer restarts, so the device sleeps again
+  after 120 s if untouched.
+- **CRITICAL BATTERY is blocking and ends in deepest sleep.** It is edge-triggered
+  (raised once on entering CRITICAL, from OK or LOW) and, being blocking,
+  supersedes a showing LOW BATTERY advisory. On entry the firmware:
+  1. gracefully stops and commits any active RECORDING or LABEL_CAPTURE (saving
+     valid audio), and stops any active PLAYBACK or list browsing;
+  2. draws the CRITICAL warning to the e-paper (bistable — it holds the image with
+     no power); then
+  3. enters the **deepest sleep the board supports with the VBAT latch held** — the
+     device does **not** auto power-off (latch stays HIGH); it stops doing work to
+     minimise drain.
+  A button (or a future charger-present signal) wakes it and re-checks the battery:
+  while still CRITICAL it redraws the warning and returns to deep sleep (the device
+  is effectively locked until it recovers); once recovered (≥10% estimate) it
+  returns to **IDLE** and normal operation. This sleep is deeper than the normal
+  120 s light sleep (see TD-4) and is entered immediately, not after the 120 s timer.
 - LOW BATTERY / CHARGING currently require a keypress to dismiss. Whether they
   should **auto-return** after a moment instead is **UX-7** in
   `../requirements/open-ux-questions.md`.

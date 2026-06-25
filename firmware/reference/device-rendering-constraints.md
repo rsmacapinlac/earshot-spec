@@ -19,6 +19,15 @@ web fonts:
    only thing smaller than FreeSans9pt (~13px tall). Nothing fills the "11px
    caption" slot — a caption is either tiny (5×7) or full-size (9pt). We hit
    this exactly with the footer note.
+
+   **Rule (validated on-device): do not use the 5×7 font for any on-screen
+   text** — there is a **9pt floor**. At the panel's viewing size 5×7 is
+   effectively unreadable, so every caption/label is **FreeSans/Bold 9pt** or
+   larger. To fit captions into tight zones, prefer **mixed case** (lowercase is
+   far narrower than uppercase, so e.g. `Battery` / `SD free` / `Clips` fit the
+   ~62px IDLE columns at 9pt) and let **icons carry the category** rather than
+   reaching for a sub-9pt label or a cramped abbreviation. 5×7 may still be used
+   for non-text drawn marks, but never for glyphs the user must read.
 3. **ASCII only.** No `×`, `—`, `•`, curly quotes, accents. Use `x`, `-`, `*`,
    straight quotes.
 4. **No letter-spacing / tracking.** GFX has fixed per-glyph advance;
@@ -68,4 +77,4 @@ short (≤~15 chars), or wrap to two lines.
 | Title wordmark        | FreeSansBold 12pt |
 | Section / stat labels | FreeSansBold 9pt  |
 | Values / body / hints | FreeSans 9pt      |
-| Tiny captions         | 5×7 (reads small) |
+| Captions / positions  | FreeSans 9pt, mixed case (**never 5×7**) |
