@@ -115,7 +115,7 @@ list can render a **has-label** marker (speaker glyph) next to the ID.
 
 Two distinct counts are displayed:
 
-- **IDLE `CLIPS`** is the full count of valid recordings on the card, which may
+- **MAIN `CLIPS`** is the full count of valid recordings on the card, which may
   exceed 16.
 - The list's **`X OF Y`** position operates over the **browsable cached window**:
   `Y = min(total valid notes, 16)` and `X` is the 1-based selection within it.

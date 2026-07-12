@@ -25,7 +25,7 @@ web fonts:
    effectively unreadable, so every caption/label is **FreeSans/Bold 9pt** or
    larger. To fit captions into tight zones, prefer **mixed case** (lowercase is
    far narrower than uppercase, so e.g. `Battery` / `SD free` / `Clips` fit the
-   ~62px IDLE columns at 9pt) and let **icons carry the category** rather than
+   ~62px MAIN columns at 9pt) and let **icons carry the category** rather than
    reaching for a sub-9pt label or a cramped abbreviation. 5×7 may still be used
    for non-text drawn marks, but never for glyphs the user must read.
 3. **ASCII only.** No `×`, `—`, `•`, curly quotes, accents. Use `x`, `-`, `*`,

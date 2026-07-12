@@ -15,7 +15,7 @@ decision; standalone entries have no ADR yet.
 | TD-1 | Battery gauge accuracy, filtering, and critical thresholds | Open | — |
 | TD-2 | Audio down-mix method | Open | — |
 | TD-3 | Audio quality ceiling (16 kHz / 16-bit) | Open | — |
-| TD-4 | Sleep depth (light vs deep) | Open | — |
+| TD-4 | Sleep depth (light vs deep) | **Resolved** (2026-07-12) | ADR-0005 |
 | TD-5 | Low-power treatment during long REC/PLAY | Open | — |
 
 ---
@@ -77,15 +77,19 @@ fidelity.
 
 ## TD-4 — Sleep depth: light vs deep
 
-**Status:** Open · **Related:** `../specs/power-sleep.md`
+**Status:** Resolved (2026-07-12) → **deep sleep** ·
+**Landed in:** `../adr/0005-idle-sleep-depth.md`, `../specs/power-sleep.md`
 
-v1 uses light-sleep after 120 s to measure real battery life; deep sleep is the
-fallback if life is poor. The 120 s inactivity trigger and button wake are settled;
-a periodic battery-check timer wake (to detect LOW/CRITICAL while asleep) is pending
-experiment `../experiments/0001-timer-wake-check.md`. Only the sleep depth is open
-here. Decide after measurement.
-
-**Interim default:** light-sleep (v1).
+Resolved in favour of **deep sleep** for best standby battery life. The original plan
+was to run light sleep first and measure real battery life before committing, but the
+product's boot-to-MAIN model (the device always wakes to MAIN, never restoring the
+prior screen) makes a cold-boot wake behaviourally identical to a normal wake —
+removing deep sleep's only real downside — so the decision no longer depends on the
+measurement. It also unifies idle and CRITICAL sleep to one depth. The 120 s trigger
+and **buttons-only** wake (no battery sampling during sleep; LOW/CRITICAL caught on
+the next button wake) are part of the settled model. See ADR-0005 for the alternatives
+and consequences (cold-boot wake, latch held through deep sleep, filter state lost on
+sleep).
 
 ## TD-5 — Low-power treatment during long REC/PLAY
 

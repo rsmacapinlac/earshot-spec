@@ -46,17 +46,13 @@ Use coarse states with hysteresis:
 
 Policy details:
 
-- **LOW before recording:** recording is allowed.
-- **LOW during recording:** show/dismiss advisory without aborting capture.
+- **LOW before recording:** recording is not allowed. 
+- **LOW during recording:** notify the user that the recording will stop, then stop the recording.
 - **CRITICAL is a full lockout ending in deepest sleep.** On entering CRITICAL the
   firmware gracefully stops and commits any active recording (or LABEL_CAPTURE),
   stops any playback/browsing, draws the CRITICAL warning to e-paper, then enters
   the deepest sleep the board supports with the VBAT latch **held**. See
   `state-machine.md` → "Condition & interrupt screens" for the full sequence.
-- **No new activity while CRITICAL:** recording, playback, and browsing are all
-  blocked. A button (or future charger) wake re-checks the battery and returns to
-  deep sleep until it recovers (≥10% estimate), at which point normal operation
-  resumes at IDLE.
 - **No automatic power-off in v1:** the VBAT latch is **not** released
   automatically; CRITICAL minimises drain via deep sleep instead, keeping the
   e-paper warning visible. Whether CRITICAL should ever release the latch (true
@@ -84,28 +80,40 @@ board powers off.
 
 ## Sleep
 
-- **Trigger:** sleep after **120 s** of inactivity (`ULTRA_SLEEP_MS`), tracked via
-  `lastActivityMs` / `resetActivity()`.
-- **Entry sequence:** show sleep screen → stop transfer server if present → mute
-  audio → keep VBAT latched → arm wake → enter sleep.
-- **Wake source:** buttons on **BTN_REC (GPIO0)** and **BTN_PWR (GPIO18)** — any
-  button press wakes the device. Detecting battery-state transitions *while asleep*
-  (the LOW "take over sleep" and CRITICAL sequences in `state-machine.md`)
-  additionally requires a periodic **battery-check timer wake**; that mechanism and
-  its interval are under evaluation in
-  `../experiments/0001-timer-wake-check.md`. Until it is adopted, LOW/CRITICAL are
-  surfaced on the next button wake rather than autonomously during sleep.
-- **CRITICAL deep sleep is separate from the idle sleep above.** The 120 s sleep
-  here is the standard idle sleep (light sleep in v1, depth open per TD-4). CRITICAL
-  battery instead enters the **deepest sleep the board supports immediately** (not
-  after the 120 s timer), with the VBAT latch held — see the CRITICAL policy under
-  "Battery states and policy" above and `state-machine.md` → "Condition & interrupt
-  screens".
+- **Inactivity timer (global):** a single inactivity timer (`ULTRA_SLEEP_MS` =
+  **120 s**, tracked via `lastActivityMs` / `resetActivity()`) runs in **every
+  screen**, not only MAIN. Any button activity resets it. When it expires the device
+  draws the SLEEP screen and enters sleep **regardless of the current screen**.
+- **Suspended during active audio:** the timer is **stopped while audio is capturing
+  or playing** — a clip (RECORDING), a spoken label (LABEL_CAPTURE), or PLAYBACK.
+  Neither a capture nor a playback is interrupted by sleep. When the activity **ends**
+  (a recording saves, or playback finishes/stops) the timer is **reset** and begins
+  counting again.
+- **Wake returns to MAIN:** buttons on **BTN_REC (GPIO0)** and **BTN_PWR (GPIO18)**
+  wake the device — any button press wakes it. Whatever screen was showing when it
+  slept is **not** restored; the device always wakes to the **MAIN** screen. The
+  press that wakes it is consumed by waking and is not acted on as an in-state press.
+- **No battery sampling while asleep (buttons-only wake).** Nothing wakes the device
+  on its own during sleep, so a battery that crosses into LOW or CRITICAL *while
+  asleep* is **not** detected autonomously. It is caught on the **next button wake**,
+  which re-checks the battery and raises the relevant condition — LOW advisory, or the
+  CRITICAL save→warn→deepest-sleep sequence — instead of returning silently to MAIN.
+  This is acceptable because captures are always committed *before* the device sleeps,
+  so no recording is at risk if the pack browns out during sleep; the only cost is that
+  the device may brown out still showing the SLEEP screen rather than a CRITICAL
+  warning. The exact brownout behavior is unvalidated — see TD-1.
+- **CRITICAL sleep and idle sleep are the same depth (deep sleep) but differ in
+  trigger and behaviour.** Idle sleep is entered after the 120 s timer and wakes to
+  MAIN; CRITICAL is entered **immediately** (not after the timer) and stays locked
+  until recovery. Both are deep sleep (ADR-0005) and both hold the VBAT latch — see
+  the CRITICAL policy under "Battery states and policy" above and `state-machine.md`
+  → "Condition & interrupt screens".
 
-> The reference firmware used deep sleep. earshot v1 uses **light sleep** after
-> the same 120 s; wake is button-driven today, with a battery-check timer wake
-> pending experiment 0001. The sleep depth is open — see **TD-4** in
-> `../requirements/open-technical-decisions.md`.
+> Like the reference firmware, earshot uses **deep sleep** after the 120 s
+> inactivity timer (**ADR-0005**). Wake is **button-driven** — nothing samples the
+> battery during sleep — and is a cold boot into MAIN. The latch must be held through
+> deep sleep (RTC GPIO hold); battery filter state is lost on sleep and
+> re-initialises on wake (harmless, since sleep does no sampling).
 
 See also `recording-playback.md` and
 `../reference/device-rendering-constraints.md`.

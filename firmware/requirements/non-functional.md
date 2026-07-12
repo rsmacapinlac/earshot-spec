@@ -9,9 +9,9 @@ broader NFR notes."
 ## Power & battery (core goal)
 
 - **Battery life is a primary product goal.** The device must sleep aggressively
-  when idle: light-sleep after 120 s of inactivity in v1.
+  when idle: **deep sleep** after 120 s of inactivity (ADR-0005).
 - Active states (RECORDING, PLAYBACK, browsing) may run subsystems at full power;
-  IDLE must shed everything it can while keeping the VBAT latch held and the
+  MAIN must shed everything it can while keeping the VBAT latch held and the
   e-paper image.
 - Battery UX and policy must be based on coarse states, not precise percentage:
   OK, LOW, and CRITICAL.

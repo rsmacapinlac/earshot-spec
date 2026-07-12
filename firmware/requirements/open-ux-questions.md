@@ -20,7 +20,7 @@ Each question has a stable ID (`UX-n`) so other docs can reference it.
 
 **Status:** Open · **Related:** `../specs/state-machine.md`
 
-Whether a long PWR press should be a universal "return to IDLE" gesture, and how
+Whether a long PWR press should be a universal "return to MAIN" gesture, and how
 far it reaches. Sources disagree: the original spec proposed it everywhere except
 RECORDING; the JSX prototype implemented it only in PLAYBACK/DELETE; the C++
 prototype largely omitted it. Sub-questions:

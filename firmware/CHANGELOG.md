@@ -4,6 +4,46 @@ All notable changes to the earshot **firmware documentation** (specs, requiremen
 ADRs, reference, experiments). The documentation set is versioned as a whole; the
 current version is recorded in `../AGENTS.md`. Dates are ISO-8601 (YYYY-MM-DD).
 
+## [1.7] — 2026-07-12
+
+### Changed
+- **Sleep is now a global inactivity model** (`specs/power-sleep.md`,
+  `specs/state-machine.md`, `reference/firmware-bring-up.md`): the 120 s
+  `ULTRA_SLEEP_MS` timer runs in **every** screen, not only the home screen, so the
+  device sleeps from whatever screen it is on after inactivity (closes the
+  "left in a browsing/confirm screen forever" drain). The timer is **suspended during
+  active audio** — RECORDING, LABEL_CAPTURE, and PLAYBACK are never interrupted by
+  sleep — and **resets** when the activity ends (a recording saves, or playback
+  finishes/stops). On wake, any button returns the device to **MAIN** regardless of
+  the screen it slept from; the prior screen is not restored and the wake press is
+  consumed. The CRITICAL immediate-deep-sleep path is unchanged.
+- **Renamed the `IDLE` state/screen to `MAIN`** across specs, requirements,
+  reference, and experiments. Lowercase "idle sleep"/"inactivity" wording is
+  unchanged; prior CHANGELOG entries retain the historical `IDLE` name.
+- **Sleep is buttons-only** (`specs/power-sleep.md`, `specs/state-machine.md`,
+  `requirements/open-technical-decisions.md` TD-4): nothing samples the battery while
+  asleep, so a LOW/CRITICAL crossing that happens during sleep is caught on the next
+  button wake rather than autonomously. Accepted as low-risk because captures are
+  always committed before sleep, so a brownout during sleep endangers no recording.
+
+- **Idle sleep depth resolved to deep sleep** (`adr/0005-idle-sleep-depth.md` — new;
+  `specs/power-sleep.md`, `specs/state-machine.md`, `requirements/non-functional.md`,
+  `reference/firmware-bring-up.md`): **TD-4 resolved**. v1 no longer uses light sleep —
+  idle sleep is deep sleep, chosen for standby battery life; the boot-to-MAIN model
+  makes cold-boot wake a non-issue and unifies idle/CRITICAL sleep to one depth. Wake
+  is a cold boot into MAIN; the VBAT latch is held through deep sleep; battery filter
+  state is lost on sleep and re-initialises on wake (harmless under buttons-only).
+
+### Added
+- **ADR-0005 — Idle sleep depth: deep sleep** (`adr/0005-idle-sleep-depth.md`):
+  records the light-vs-deep decision, its rationale, and consequences; resolves TD-4.
+
+### Removed
+- **Experiment 0001 — Timer-Wake-to-Check** (`experiments/0001-timer-wake-check.md`):
+  removed. It validated a periodic battery-check timer wake during sleep; with the
+  buttons-only decision above there is no autonomous sleep check to validate, so the
+  experiment no longer supports a live decision.
+
 ## [1.6] — 2026-06-24
 
 ### Changed

@@ -51,8 +51,9 @@ Key seams:
    inspect header/data, play known WAV, watch for I2S underruns.
 8. **Concurrency** — REC/PLAY with timer partial refreshes; skip/defer UI refresh
    if audio underruns appear.
-9. **Sleep/wake** — 120 s IDLE timeout, SLEEP screen retention, light-sleep
-   current, either-button wake, repeated cycles.
+9. **Sleep/wake** — 120 s inactivity timeout from any screen (suspended during
+   capture/playback), SLEEP screen retention, deep-sleep current + latch held
+   through sleep, either-button cold-boot wake to MAIN, repeated cycles.
 10. **Fault injection** — no SD, full SD, low/critical battery simulation,
     corrupt notes, power loss/cancel mid-record.
 
@@ -63,8 +64,8 @@ Key seams:
 - Exact orphan/corrupt/temp-file recovery policy.
 - Minimum-free-space threshold before recording and behavior when free space
   disappears mid-recording.
-- Battery-life target that determines whether TD-4 moves from light sleep to deep
-  sleep.
+- Battery-life validation of deep sleep (ADR-0005): measured standby current, cold-
+  boot wake latency, and real run time against the battery-life target.
 - Hardware validation of whether long REC/PLAY needs a cleanup full-refresh
   cadence.
 - Charger-present detection mechanism, if CHARGING should auto-raise.
@@ -77,7 +78,7 @@ Key seams:
 | Audio worker and app loop contend | Audio worker runs at higher priority; defer/skip UI work under audio load; measure underruns. |
 | SD write interruption corrupts notes | Temp file + commit discipline; header backfill before metadata commit; robust scan ignoring incomplete files. |
 | Battery gauge inaccurate or load-sensitive | Treat as provisional; measure against pack voltage; use coarse battery states and filtering. |
-| Light-sleep current insufficient | Keep power seam swappable; collect current/wake-latency data for TD-4. |
+| Deep-sleep standby life poor or cold-boot wake too slow | Measure standby current + wake latency; keep the power seam swappable; ADR-0005 documents the tradeoff, revisit if unacceptable. |
 | VBAT latch release mistake powers off device | Centralize latch writes; avoid release calls in v1 unless intentional and hardware-verified. |
 | CHARGING cannot auto-trigger | Keep as force-test/future behavior until a board mechanism is defined. |
 

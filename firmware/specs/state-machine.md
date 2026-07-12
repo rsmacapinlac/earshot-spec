@@ -57,7 +57,7 @@ events rather than button navigation — see "Condition & interrupt screens".
 
 | State          | Activity level    | Purpose |
 | -------------- | ----------------- | ------- |
-| IDLE           | light sleep target | Standby home: battery, free storage, note count. |
+| MAIN           | deep-sleep target | Standby home: battery, free storage, note count. |
 | RECORDING      | fully active      | Capturing audio; live elapsed timer. |
 | LABEL_PROMPT   | fully active      | Post-save: offer to add a spoken label to the note just saved. |
 | LABEL_CAPTURE  | fully active      | Capture/replace a note's spoken `label.wav`; same model as RECORDING. |
@@ -74,21 +74,21 @@ existing note (`PLAYBACK → LABEL_CAPTURE`).
 
 | From | Catalyst | To / effect |
 | ---- | -------------- | ----------- |
-| **IDLE** | PWR double | RECORDING (start capture, elapsed = 0) |
-| **IDLE** | BOOT double | RECORDINGS_LIST (listIndex = 0) |
-| **IDLE** | (120 s idle) | enter sleep (see Power, below) |
+| **MAIN** | PWR double | RECORDING (start capture, elapsed = 0) |
+| **MAIN** | BOOT double | RECORDINGS_LIST (listIndex = 0) |
+| **any screen** | 120 s inactivity (timer suspended during RECORDING / LABEL_CAPTURE / PLAYBACK) | enter sleep → wake to MAIN (see Power, below) |
 | **RECORDING** | PWR short | **save** note → LABEL_PROMPT |
-| **RECORDING** | BOOT short | **cancel** (discard take) → IDLE |
+| **RECORDING** | BOOT short | **cancel** (discard take) → MAIN |
 | **LABEL_PROMPT** | PWR short | `LABEL` → LABEL_CAPTURE (capture for the just-saved note) |
-| **LABEL_PROMPT** | BOOT short | `SKIP` → IDLE (note is already saved; a label can be added later) |
+| **LABEL_PROMPT** | BOOT short | `SKIP` → MAIN (note is already saved; a label can be added later) |
 | **LABEL_CAPTURE** | PWR short | `SAVE` → commit `label.wav` → return to caller |
 | **LABEL_CAPTURE** | BOOT short | `CANCEL` → keep any prior label → return to caller |
 | **RECORDINGS_LIST** (non-empty) | BOOT short | advance selection (wraps) |
-| **RECORDINGS_LIST** (non-empty) | BOOT long | exit → IDLE |
+| **RECORDINGS_LIST** (non-empty) | BOOT long | exit → MAIN |
 | **RECORDINGS_LIST** (non-empty) | PWR short | PLAYBACK of selected (elapsed = 0); a labelled note plays its label first, then the recording — see `recording-playback.md` → "Label-first playback" |
 | **RECORDINGS_LIST** (non-empty) | PWR long | DELETE_CONFIRM |
-| **RECORDINGS_LIST** (empty) | BOOT long | exit → IDLE |
-| **RECORDINGS_LIST** (empty) | PWR short | exit → IDLE |
+| **RECORDINGS_LIST** (empty) | BOOT long | exit → MAIN |
+| **RECORDINGS_LIST** (empty) | PWR short | exit → MAIN |
 | **DELETE_CONFIRM** | PWR short | delete selected → RECORDINGS_LIST |
 | **DELETE_CONFIRM** | BOOT short | cancel → RECORDINGS_LIST |
 | **PLAYBACK** | BOOT short | `RELABEL` → stop playback → LABEL_CAPTURE (relabel this note) |
@@ -101,48 +101,52 @@ existing note (`PLAYBACK → LABEL_CAPTURE`).
 `LABEL_CAPTURE` remembers how it was entered and returns there on both `SAVE`
 and `CANCEL`:
 
-- entered from **LABEL_PROMPT** (post-save) → return to **IDLE**;
+- entered from **LABEL_PROMPT** (post-save) → return to **MAIN**;
 - entered from **PLAYBACK** (`RELABEL`) → playback is stopped on entry; return to
   **RECORDINGS_LIST** with the same note still selected.
 
 
 ## Empty-list behaviour
 
-- Entering RECORDINGS_LIST with zero notes shows the empty screen. `BOOT long → IDLE`
-  is the displayed hint; `PWR short → IDLE` is also accepted as a harmless OK/exit path.
+- Entering RECORDINGS_LIST with zero notes shows the empty screen. `BOOT long → MAIN`
+  is the displayed hint; `PWR short → MAIN` is also accepted as a harmless OK/exit path.
 - Deleting the **last** remaining note returns to RECORDINGS_LIST in its empty
-  presentation (not to IDLE). Deleting with notes remaining keeps the list and
+  presentation (not to MAIN). Deleting with notes remaining keeps the list and
   clamps the selection to a valid index.
 
 ## Condition & interrupt screens
 
 These screens are raised by **hardware/system conditions**, not by navigating the
 flow above. They are interrupts: an advisory one overlays and returns you where
-you were; a blocking one prevents the action and drops to IDLE. Layouts are in
+you were; a blocking one prevents the action and drops to MAIN. Layouts are in
 the design.
 CHARGING is currently a reserved/renderable condition only: the firmware has no
 charger-present detector wired, so it is not auto-raised in normal operation.
 
 | Screen | Raised when | Kind | Action → result |
 | ------ | ----------- | ---- | --------------- |
-| LOW BATTERY | battery state enters LOW (once, on OK→LOW) | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues (SLEEP exception below: dismiss → IDLE) |
-| CRITICAL BATTERY | battery enters CRITICAL (once, on OK→CRITICAL or LOW→CRITICAL) | blocking — saves, warns, then deep-sleeps (latch held) | no dismiss: auto-enters deepest sleep; button wake re-checks battery, returns to IDLE only on recovery ≥10% (see note) |
+| LOW BATTERY | battery state enters LOW (once, on OK→LOW) | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues (SLEEP exception below: dismiss → MAIN) |
+| CRITICAL BATTERY | battery enters CRITICAL (once, on OK→CRITICAL or LOW→CRITICAL) | blocking — saves, warns, then deep-sleeps (latch held) | no dismiss: auto-enters deepest sleep; button wake re-checks battery, returns to MAIN only on recovery ≥10% (see note) |
 | CHARGING | reserved for charger-present detection; current firmware has no hardware signal/API wired | advisory when raised by test/future detector | PWR dismiss → return to prior screen |
-| NO SD CARD | card absent / unreadable | blocking | BOOT `exit (hold)` → IDLE |
-| STORAGE FULL | new recording cannot be created or started because storage is unavailable/full | blocking | PWR `OK` → IDLE |
-| SLEEP | 120 s inactivity | transient | any button will wake to IDLE |
+| NO SD CARD | card absent / unreadable | blocking | BOOT `exit (hold)` → MAIN |
+| STORAGE FULL | new recording cannot be created or started because storage is unavailable/full | blocking | PWR `OK` → MAIN |
+| SLEEP | 120 s inactivity from any screen (timer suspended during RECORDING / LABEL_CAPTURE / PLAYBACK) | transient | any button will wake to MAIN |
 
 Notes:
 
 - **Advisory screens don't abort the current activity** — dismissing LOW BATTERY
-  during RECORDING returns to the live recording, not IDLE.
+  during RECORDING returns to the live recording, not MAIN.
 - **LOW BATTERY is edge-triggered** — it is raised once on the OK→LOW transition,
   not continuously while LOW. Navigating between screens does not re-raise it.
-- **SLEEP is the exception to "return to prior screen."** If the OK→LOW
-  transition occurs while the device is in SLEEP, LOW BATTERY **takes over** the
-  sleep screen and wakes the display. Dismissing it (PWR) goes to **IDLE**, not
-  back to sleep; the 120 s inactivity timer restarts, so the device sleeps again
-  after 120 s if untouched.
+- **Battery transitions during SLEEP are caught on the next button wake, not
+  autonomously.** Sleep is buttons-only — nothing samples the battery while asleep.
+  If the battery has crossed OK→LOW (or into CRITICAL) while the device was asleep,
+  the crossing is detected when a button next wakes it: the wake re-checks the
+  battery and raises the relevant condition (LOW BATTERY, or the CRITICAL sequence)
+  instead of returning silently to MAIN. For LOW, this is the exception to "return
+  to prior screen" — dismissing it (PWR) goes to **MAIN**, not back to sleep, and the
+  120 s inactivity timer restarts, so the device sleeps again after 120 s if
+  untouched.
 - **CRITICAL BATTERY is blocking and ends in deepest sleep.** It is edge-triggered
   (raised once on entering CRITICAL, from OK or LOW) and, being blocking,
   supersedes a showing LOW BATTERY advisory. On entry the firmware:
@@ -156,8 +160,9 @@ Notes:
   A button (or a future charger-present signal) wakes it and re-checks the battery:
   while still CRITICAL it redraws the warning and returns to deep sleep (the device
   is effectively locked until it recovers); once recovered (≥10% estimate) it
-  returns to **IDLE** and normal operation. This sleep is deeper than the normal
-  120 s light sleep (see TD-4) and is entered immediately, not after the 120 s timer.
+  returns to **MAIN** and normal operation. This sleep is the **same depth as normal
+  idle sleep — deep sleep (ADR-0005)** — but is entered immediately, not after the
+  120 s timer, and stays locked until recovery.
 - LOW BATTERY / CHARGING currently require a keypress to dismiss. Whether they
   should **auto-return** after a moment instead is **UX-7** in
   `../requirements/open-ux-questions.md`.
@@ -170,11 +175,15 @@ Notes:
 
 ## Power interaction
 
-earshot **boots directly into IDLE** — there is no splash/boot screen in v1. IDLE
-is the only state that sleeps: after **120 s** of
-inactivity the device enters light-sleep, drawing the SLEEP screen first. Any
-button wakes it back to IDLE. Activity in any active state resets the inactivity
-timer. The exact sleep depth (light vs deep) is provisional pending battery
-testing.
+earshot **boots directly into MAIN** — there is no splash/boot screen in v1. A
+single **global inactivity timer** runs in every screen: after **120 s** of
+inactivity the device enters **deep sleep** from **whatever screen it is on**,
+drawing the SLEEP screen first. Any button activity resets the timer. The **one
+exception** is active audio — while RECORDING, LABEL_CAPTURE, or PLAYBACK the timer
+is **suspended** so a capture or playback is never interrupted by sleep; it
+**resets** when the activity ends (a recording saves, or playback finishes/stops).
+On wake, any button returns the device to **MAIN** regardless of the screen it slept
+from — the prior screen is not restored. Sleep is **deep sleep** (ADR-0005), so wake
+is a cold boot into MAIN — behaviourally identical to the normal boot-into-MAIN.
 
 See also `power-sleep.md`.

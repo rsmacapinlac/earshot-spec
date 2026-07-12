@@ -14,8 +14,12 @@ as the record.
 
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
-| [0001](0001-timer-wake-check.md) | Timer-wake-to-check battery sampling during sleep | Fixed ~5-min sleep battery poll in `../specs/power-sleep.md` (TD-1) | Proposed |
+| _None open._ | | | |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise
 implementation specs live in `../specs/`.
+
+> Experiment 0001 (timer-wake battery sampling during sleep) was removed in v1.7:
+> sleep is buttons-only, so there is no autonomous battery check to validate. See
+> `../specs/power-sleep.md` → "Sleep".

@@ -39,7 +39,7 @@ Be concise, direct, and collaborative. The user is actively shaping product and 
 
 ## Firmware Section
 
-This firmware documentation is **v1.6**. See `firmware/CHANGELOG.md` for the
+This firmware documentation is **v1.7**. See `firmware/CHANGELOG.md` for the
 version history.
 
 The firmware implementation lives in the separate GitHub repository:
