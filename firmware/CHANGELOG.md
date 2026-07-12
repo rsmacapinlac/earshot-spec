@@ -6,6 +6,15 @@ current version is recorded in `../AGENTS.md`. Dates are ISO-8601 (YYYY-MM-DD).
 
 ## [1.7] — 2026-07-12
 
+### Fixed
+- **LOW battery policy corrected to advisory-only** (`specs/power-sleep.md`): the
+  LOW policy bullets — present since the v1.5 reorg (`9fc5f49`) — read "recording
+  not allowed / stop the recording", contradicting `specs/state-machine.md` (the
+  behavioral source of truth) and the design screens, which keep LOW as a
+  non-blocking, dismissable advisory with recording continuing. The bullets now
+  match: recording is allowed while LOW, and an active capture is never aborted by
+  it.
+
 ### Changed
 - **Sleep is now a global inactivity model** (`specs/power-sleep.md`,
   `specs/state-machine.md`, `reference/firmware-bring-up.md`): the 120 s

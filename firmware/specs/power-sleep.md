@@ -46,8 +46,10 @@ Use coarse states with hysteresis:
 
 Policy details:
 
-- **LOW before recording:** recording is not allowed. 
-- **LOW during recording:** notify the user that the recording will stop, then stop the recording.
+- **LOW before recording:** recording is allowed. LOW is a non-blocking advisory
+  (`state-machine.md` → "Condition & interrupt screens").
+- **LOW during recording:** show/dismiss the advisory without aborting capture —
+  the recording continues.
 - **CRITICAL is a full lockout ending in deepest sleep.** On entering CRITICAL the
   firmware gracefully stops and commits any active recording (or LABEL_CAPTURE),
   stops any playback/browsing, draws the CRITICAL warning to e-paper, then enters
