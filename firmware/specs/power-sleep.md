@@ -102,6 +102,11 @@ board powers off.
   so no recording is at risk if the pack browns out during sleep; the only cost is that
   the device may brown out still showing the SLEEP screen rather than a CRITICAL
   warning. The exact brownout behavior is unvalidated — see TD-1.
+- **A battery check runs on the wake/boot path.** Because wake is a cold boot
+  (ADR-0005), the boot sequence performs a battery read before settling in MAIN. This
+  is what raises LOW/CRITICAL after a crossing that happened during sleep, and — since
+  a cold boot retains no prior state — it evaluates the level directly rather than as
+  an edge (already ≤ LOW → LOW; already ≤ CRITICAL → CRITICAL sequence).
 - **CRITICAL sleep and idle sleep are the same depth (deep sleep) but differ in
   trigger and behaviour.** Idle sleep is entered after the 120 s timer and wakes to
   MAIN; CRITICAL is entered **immediately** (not after the timer) and stays locked

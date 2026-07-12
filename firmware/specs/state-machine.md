@@ -138,6 +138,13 @@ Notes:
   during RECORDING returns to the live recording, not MAIN.
 - **LOW BATTERY is edge-triggered** — it is raised once on the OK→LOW transition,
   not continuously while LOW. Navigating between screens does not re-raise it.
+- **Edge-triggering is per awake session; a cold-boot wake evaluates the battery
+  fresh.** Because idle sleep is deep sleep (ADR-0005), a wake is a cold boot with no
+  retained prior state, so there is no OK→LOW/CRITICAL *edge* to compare against.
+  Instead the boot-time battery check evaluates the level directly: if the battery is
+  already at/below the LOW threshold on boot it raises LOW BATTERY, and if at/below
+  CRITICAL it runs the CRITICAL sequence. Within a single awake session the screens
+  are edge-triggered as above.
 - **Battery transitions during SLEEP are caught on the next button wake, not
   autonomously.** Sleep is buttons-only — nothing samples the battery while asleep.
   If the battery has crossed OK→LOW (or into CRITICAL) while the device was asleep,
