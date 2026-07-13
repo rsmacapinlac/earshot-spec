@@ -24,7 +24,7 @@ decision; standalone entries have no ADR yet.
 
 **Status:** Open · **Related:** `../specs/power-sleep.md` (Battery)
 
-The voltage→percent curve is a generic at-rest Li-ion approximation snapped to
+The voltage→percent curve is a generic at-rest Li-ion polynomial snapped to
 5% — fine for a coarse gauge, not fuel-gauge accurate. The battery is a generic
 **3.7 V single-cell LiPo on an MX1.25 connector**; its manufacturer and capacity
 (mAh) are unspecified, so there is no datasheet curve and no validated runtime
@@ -49,11 +49,10 @@ Path to closing this item:
 - **Filtering / load handling:** EMA or rolling median, with IR compensation or
   rest-sampling so load sag doesn't distort SoC.
 
-**Interim default:** generic at-rest LiPo curve in `../specs/power-sleep.md`,
-coarse OK/LOW/CRITICAL states, LOW at ≤15% / recover ≥20%, provisional CRITICAL
-at ≤5% or ≤3.30 V / recover ≥10%. With the updated curve these percent triggers
-map to higher pack voltages than the old curve (LOW ≈ 3.65 V, CRITICAL ≈ 3.45 V),
-with ≤3.30 V as the empty/backstop clamp.
+**Interim default:** generic at-rest LiPo curve in `../specs/power-sleep.md` for
+5%-snapped display/debug only. Policy is voltage-backed: LOW at filtered VBAT
+≤3.65 V / recover ≥3.70 V; provisional CRITICAL at ≤3.45 V / recover ≥3.60 V,
+with ≤3.30 V treated as the absolute empty/backstop clamp.
 
 ## TD-2 — Audio down-mix method
 

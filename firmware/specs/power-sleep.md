@@ -17,32 +17,44 @@ ESP32-S3 1.54" e-Paper board.
 ## Battery gauge
 
 The ADC voltage gauge is approximate. Do not treat percentage as a precise fuel
-gauge. UI and policy should rely primarily on coarse battery states.
+gauge. UI and policy should rely primarily on filtered voltage and coarse battery
+states; percentage is only a user-facing estimate.
 
-A rough percent may still be computed for display/debug using this piecewise
-curve, snapped to the nearest **5%**. It approximates the at-rest discharge curve
-of a generic 3.7 V single-cell LiPo (the target battery is a 3.7 V LiPo on an
-MX1.25 connector):
+A rough percent may still be computed for display/debug using this generic LiPo
+voltage polynomial, then snapped to the nearest **5%**:
 
-| Voltage | 3.30 V | 3.60 V | 3.70 V | 3.80 V | 3.90 V | 4.00 V | 4.12 V |
-| ------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| Percent | 0%     | 10%    | 25%    | 50%    | 70%    | 90%    | 100%   |
+```text
+v = filtered pack voltage in volts
+percent = -144.9390*v^3 + 1655.8629*v^2 - 6158.8520*v + 7501.3202
+percent = clamp(percent, 0, 100)
+display_percent = 100 if filtered pack voltage ≥ 4.10 V, otherwise round_to_nearest_5(percent)
+```
 
-Clamps: `≥ 4.12 V → 100%`, `≤ 3.30 V → 0%`. Interpolate linearly between anchors,
-then snap to 5%. This is a generic **at-rest** curve: under recording, playback,
-or e-paper refresh the pack sags below these values, so it will under-report SoC
-under load until a real discharge log is captured (see TD-1). Capacity (mAh) is
-unspecified for this cell, so percent has no validated runtime meaning yet.
+Approximate examples before 5% snapping:
+
+| Voltage | 3.30 V | 3.50 V | 3.60 V | 3.65 V | 3.70 V | 3.80 V | 3.90 V | 4.00 V | 4.10 V | 4.20 V |
+| ------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
+| Percent | 1%     | 15%    | 27%    | 34%    | 41%    | 55%    | 70%    | 84%    | 96%    | 100%   |
+
+Display is snapped to 5% because this board has only a voltage ADC path, not a
+fuel-gauge IC. For UX, filtered VBAT ≥4.10 V displays as **100%** even though the
+polynomial would report slightly below full; many real chargers/devices never sit
+at 4.20 V while running. This is display-only and does not affect LOW/CRITICAL
+policy. This is a generic **at-rest** curve: under recording, playback, or e-paper
+refresh the pack sags below the curve, so it may under-report SoC under load until
+a real discharge log is captured (see TD-1). Capacity (mAh) is unspecified for
+this cell, so percent has no validated runtime meaning yet.
 
 ## Battery states and policy
 
-Use coarse states with hysteresis:
+Use coarse states with hysteresis. State transitions are based on **filtered pack
+voltage**, not displayed percentage:
 
 | State | Enter | Recover | Behavior |
 | ----- | ----- | ------- | -------- |
 | OK | above LOW recovery | — | normal operation |
-| LOW | ≤ 15% estimate | ≥ 20% estimate | visual advisory; do not interrupt active recording |
-| CRITICAL | ≤ 5% estimate (primary), or the ≤ 3.30 V empty clamp as an absolute backstop | ≥ 10% estimate | full lockout → stop & commit active capture, block all activity, warn, then deepest sleep with latch held (see policy below) |
+| LOW | ≤ 3.65 V | ≥ 3.70 V | visual advisory; do not interrupt active recording |
+| CRITICAL | ≤ 3.45 V (with ≤ 3.30 V treated as absolute empty/backstop) | ≥ 3.60 V | full lockout → stop & commit active capture, block all activity, warn, then deepest sleep with latch held (see policy below) |
 
 Policy details:
 

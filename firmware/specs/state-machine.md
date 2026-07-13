@@ -126,7 +126,7 @@ charger-present detector wired, so it is not auto-raised in normal operation.
 | Screen | Raised when | Kind | Action → result |
 | ------ | ----------- | ---- | --------------- |
 | LOW BATTERY | battery state enters LOW (once, on OK→LOW) | advisory (non-blocking) | PWR dismiss → return to prior screen; recording continues (SLEEP exception below: dismiss → MAIN) |
-| CRITICAL BATTERY | battery enters CRITICAL (once, on OK→CRITICAL or LOW→CRITICAL) | blocking — saves, warns, then deep-sleeps (latch held) | no dismiss: auto-enters deepest sleep; button wake re-checks battery, returns to MAIN only on recovery ≥10% (see note) |
+| CRITICAL BATTERY | battery enters CRITICAL (once, on OK→CRITICAL or LOW→CRITICAL) | blocking — saves, warns, then deep-sleeps (latch held) | no dismiss: auto-enters deepest sleep; button wake re-checks battery, returns to MAIN only on recovery ≥3.60 V (see note) |
 | CHARGING | reserved for charger-present detection; current firmware has no hardware signal/API wired | advisory when raised by test/future detector | PWR dismiss → return to prior screen |
 | NO SD CARD | card absent / unreadable | blocking | BOOT `exit (hold)` → MAIN |
 | STORAGE FULL | new recording cannot be created or started because storage is unavailable/full | blocking | PWR `OK` → MAIN |
@@ -166,8 +166,8 @@ Notes:
      minimise drain.
   A button (or a future charger-present signal) wakes it and re-checks the battery:
   while still CRITICAL it redraws the warning and returns to deep sleep (the device
-  is effectively locked until it recovers); once recovered (≥10% estimate) it
-  returns to **MAIN** and normal operation. This sleep is the **same depth as normal
+  is effectively locked until it recovers); once recovered (filtered VBAT ≥3.60 V)
+  it returns to **MAIN** and normal operation. This sleep is the **same depth as normal
   idle sleep — deep sleep (ADR-0005)** — but is entered immediately, not after the
   120 s timer, and stays locked until recovery.
 - LOW BATTERY / CHARGING currently require a keypress to dismiss. Whether they

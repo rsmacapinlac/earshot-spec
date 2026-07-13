@@ -4,6 +4,18 @@ All notable changes to the earshot **firmware documentation** (specs, requiremen
 ADRs, reference, experiments). The documentation set is versioned as a whole; the
 current version is recorded in `../AGENTS.md`. Dates are ISO-8601 (YYYY-MM-DD).
 
+## [Unreleased]
+
+### Changed
+- **Battery gauge/policy split** (`specs/power-sleep.md`,
+  `specs/state-machine.md`, `requirements/open-technical-decisions.md`): adopted a
+  CrossInk-style LiPo voltage polynomial for 5%-snapped display/debug percentage,
+  while making LOW/CRITICAL policy explicitly voltage-backed (LOW ≤3.65 V / recover
+  ≥3.70 V; CRITICAL ≤3.45 V / recover ≥3.60 V, with ≤3.30 V as the absolute empty
+  backstop). Display rounds VBAT ≥4.10 V up to 100% for practical full-charge UX.
+  This keeps user-facing percent as an estimate and safety behavior tied to measured
+  VBAT.
+
 ## [1.7] — 2026-07-12
 
 ### Fixed
