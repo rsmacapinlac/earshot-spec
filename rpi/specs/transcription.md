@@ -11,11 +11,11 @@ idle time only; never competes with recording. LED behavior:
 ## FR-14: Queue
 - Enabled unless `transcription.enabled = false`.
 - A session is **pending** when its directory has `session.wav` but no
-  `transcript.md`.
+  `transcript.md` and no `.failed_transcription` marker.
 - The queue is implicit — derived from the filesystem at runtime (no queue file).
 - Processed **FIFO**, oldest session directory first (by timestamp name).
 - The queue persists across reboots; a session stays pending until `transcript.md`
-  is written.
+  or `.failed_transcription` is written.
 
 ### FR-14a: Scheduling
 - Transcription runs only when idle **and** the queue is non-empty. The idle loop
@@ -34,15 +34,26 @@ idle time only; never competes with recording. LED behavior:
 - Each pending session's **`session.wav`** is transcribed (`transcribe_session`);
   faster-whisper decodes the WAV via ffmpeg and reads lazily during segment
   iteration.
-- Runs in a cancellable worker thread. Cancellation triggers:
+- Runs in a cancellable worker thread. Cancellation trigger:
   - **Button press** → return `"button"` (start recording).
-  - **USB stick inserted** → return `"usb"` (offload).
-- On success: write `transcript_raw.json` then `transcript.md`, update
-  `status.json` to `transcribed` (+ `transcribed_at`), pop the session, and
-  re-scan for newly arrived sessions.
-- On failure: no transcript is written; the session stays at the front of the
-  queue; the failure is logged; the run ends and is retried on the next idle
-  window.
+- On success: write `transcript_raw.json` then `transcript.md`, delete any
+  `.transcription_failures.json` retry-state file, update `status.json` to
+  `transcribed` (+ `transcribed_at`), pop the session, and re-scan for newly
+  arrived sessions.
+- On failure: no transcript is written; the failure is logged with the session
+  path and attempt count. Increment the persisted failure count in
+  `.transcription_failures.json` so retries survive service restarts and reboots.
+  If `transcription.max_failures = 0`, the session stays at the front of the queue
+  and is retried on the next idle window forever. If `max_failures > 0`, retry
+  until the persisted count reaches `max_failures`; then write
+  `.failed_transcription`, delete `.transcription_failures.json`, and skip the
+  session on future queue scans until `.failed_transcription` is manually deleted.
+- `.transcription_failures.json` contains at least `count`, `last_failed_at`, and
+  `last_error`. `.failed_transcription` is a small text marker containing the
+  failure count, timestamp of the last failure, and last error summary.
+  `session.wav` remains in place for manual recovery or future retry;
+  `transcript.md` is not written. Deleting `.failed_transcription` gives the
+  session a clean retry attempt.
 
 ## FR-16: Transcript format
 `transcript.md`, `earshot-tui`-compatible:
@@ -57,7 +68,7 @@ idle time only; never competes with recording. LED behavior:
 [HH:MM:SS] segment text
 ```
 - Header timestamp: the session directory name as a human-readable date.
-- **Duration:** total audio duration across all chunks.
+- **Duration:** the `session.wav` duration (frame count ÷ sample rate).
 - **Processed:** wall-clock time transcription completed.
 - Timestamps use `[MM:SS]` under one hour, `[HH:MM:SS]` at/beyond one hour.
 - Segment text is raw faster-whisper output — no post-processing.
@@ -74,7 +85,9 @@ idle time only; never competes with recording. LED behavior:
 - Installs `faster-whisper` via pip (no build step).
 - Pre-downloads the configured model to `~/.local/share/earshot/models/`
   (default `base.en` INT8, ~60 MB).
-- Writes `transcription.enabled` and `transcription.model` to `config.toml`.
+- Writes `transcription.enabled`, `transcription.model`, and
+  `transcription.max_failures` to `config.toml`; other `[transcription]` keys
+  (e.g. `threads`) take their documented defaults.
 - `--no-transcription` skips the model download; users can also set
   `enabled = false` post-install.
 

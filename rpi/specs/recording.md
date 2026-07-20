@@ -67,11 +67,13 @@ amixer -c $card sset 'ADC High Pass Filter' on
   there (`alsactl --file=/etc/voicecard/wm8960_asound.state store`) or they are
   lost on reboot. The installer applies and persists them (see
   [install-service.md](install-service.md#fr-8-one-line-install)).
-- **`ALC Max Gain` is a starting value.** The index→dB mappings above are derived
-  from the WM8960 registers and should be read back on the device during bring-up;
-  the final Max Gain (5 vs 7) is confirmed on hardware — raise toward 7 only if
-  distant speech is under-levelled and doing so adds no audible pumping/noise-floor
-  lift or transcription regression.
+- **`ALC Max Gain = 5` is the v1 implementation value.** Although this value is
+  provisional pending hardware validation, implementers must ship `5` unless a
+  documented experiment updates this spec. The index→dB mappings above are
+  derived from the WM8960 registers and should be read back on the device during
+  bring-up. Raise toward `7` only after measured evidence shows distant speech is
+  under-levelled and the increase adds no audible pumping/noise-floor lift or
+  transcription regression.
 - Front-end facts and the shipped default are in
   [../reference/respeaker-2mic-hat.md](../reference/respeaker-2mic-hat.md#capture-front-end).
 
@@ -88,8 +90,11 @@ amixer -c $card sset 'ADC High Pass Filter' on
   (see FR-3).
 - There is no maximum session duration. Recording continues until the button is
   pressed or the disk threshold is reached mid-session.
-- Any chunk (including the final one) shorter than
-  `recording.min_duration_seconds` is discarded rather than kept.
+- `recording.min_duration_seconds` is a **session**-level minimum: a session whose
+  total captured audio is shorter than it is discarded (LED double-flashes green,
+  see [state-machine.md](state-machine.md#fr-2-start-recording)). A normal timer
+  rollover is never subject to this check — a short final chunk of a longer session
+  is concatenated like any other.
 
 ### Disk threshold mid-session
 If the disk threshold is reached during recording, recording stops, the current
@@ -102,8 +107,7 @@ On the button press that ends the session (LED → amber):
 
 1. **Concatenate** all `recording-*.wav` chunks into a single **`session.wav`**
    (`concat_wav_files`; same-format PCM concat, no re-encode).
-2. **Retain `session.wav`** — it is the artifact used for transcription and USB
-   offload.
+2. **Retain `session.wav`** — it is the artifact used for transcription.
 3. **Delete the `recording-*.wav` chunks** once `session.wav` is written, leaving
    one copy of the audio on disk (see
    [Audio storage format](../adr/0001-audio-storage-format.md)).

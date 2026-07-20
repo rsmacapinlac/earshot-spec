@@ -26,9 +26,9 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   default `audio.channels` becomes `1`; `recording.md`/`configuration.md`/
   `storage.md` updated.
 - **TD-3 resolved and removed — Pi 4B is the minimum; Pi Zero 2W is out of scope.**
-  Dropped the Pi Zero 2W + USB-gadget-mode design-intent content from
-  `hardware.md`, `usb-offload.md`, `transcription.md`, and the systemd capability
-  rationale (`CAP_SYS_MODULE`/`CAP_SYS_ADMIN` no longer needed).
+  Dropped the Pi Zero 2W removable-device design-intent content from `hardware.md`,
+  `transcription.md`, and the systemd capability rationale
+  (`CAP_SYS_MODULE`/`CAP_SYS_ADMIN` no longer needed).
 - **TD-4 resolved and removed — default transcription model is now `base.en`**
   (was `tiny.en`), for better accuracy on the Pi 4B; `tiny.en` stays available as
   the lighter alternative. `configuration.md`/`transcription.md` updated. The
@@ -45,6 +45,30 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   The LED is the sole feedback channel.
 - **Backlog triaged.** Dropped B-T2 (installer model prompt) and B-I2 (Pi 5
   support). **B-I1 (Web UI / dashboard) promoted to the next release.**
+- **Retired FR-11 from v1.** Dropped the related state-machine path,
+  dependencies, and transcription cancellation path.
+
+### Fixed
+- **Documentation audit corrections** across the RPi set:
+  - **Python/OS mismatch.** The target OS is Debian 13 "trixie" (Python 3.13);
+    the docs called for a "Python 3.11 venv" as if 3.11 shipped with it. Clarified
+    that 3.11 is the *minimum* and the venv uses the newer OS default
+    (`adr/0002-python-venv-over-docker.md`, `specs/install-service.md`).
+  - **`hardware.md` RAM table** contradicted itself (Model row "2 GB min" vs. RAM
+    row "4 GB"). Collapsed to one row: 2 GB min, 4 GB recommended, 8 GB supported.
+  - **Boot config** (`reference/respeaker-2mic-hat.md`) was missing `dtparam=spi=on`
+    despite the APA102 LEDs running over SPI; added it to the `config.txt` block.
+  - **"Single-threaded"** in `specs/state-machine.md` contradicted its own
+    Concurrency table; reworded to "single-threaded control loop" with the
+    transcription worker called out.
+  - **`min_duration_seconds` semantics** were session-level in `configuration.md`
+    but per-chunk in `recording.md`; reconciled to session-level so a short final
+    chunk of a longer session is no longer silently dropped.
+  - **Minor clarifications:** transcript **Duration** is derived from `session.wav`
+    (not "all chunks", which are deleted); FR-18 notes the installer leaves
+    `transcription.threads` at its default; the systemd contract notes
+    `network.target` is ordering-only (per NFR-1) and that `systemctl restart` is
+    the supported way to apply config changes.
 
 ## [1.0] — 2026-07-19
 
@@ -60,9 +84,9 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   chunked recording — each with an *Implementation note* flagging intended
   implementation specifics.
 - **Specs** (`specs/`): normative configuration schema, state machine + LED table,
-  recording, storage/filesystem-state, transcription, USB offload, and the
-  installer + systemd service contract. `FR-n` identifiers give the implementation
-  and `earshot-tui` stable requirement IDs to trace behavior to.
+  recording, storage/filesystem-state, transcription, and the installer + systemd
+  service contract. `FR-n` identifiers give the implementation and `earshot-tui`
+  stable requirement IDs to trace behavior to.
 - **Reference** (`reference/respeaker-2mic-hat.md`): ReSpeaker 2-Mic HAT hardware
   facts and the expected WM8960 mixer/boot configuration.
 - **Experiments** (`experiments/`): scaffolding (README + TEMPLATE) for future
@@ -77,8 +101,8 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 ### Audio format
 - Audio is stored as a single **`session.wav`** (chunks concatenated at session
-  end); `session.wav` is the offloaded and transcribed artifact. See the
+  end); `session.wav` is the transcribed artifact. See the
   [audio storage format ADR](adr/0001-audio-storage-format.md).
 
 ### Notes
-- Scope is **Pi 4B + ReSpeaker + USB-A offload**.
+- Scope is **Pi 4B + ReSpeaker**.

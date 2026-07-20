@@ -17,12 +17,18 @@ Rationale: [`../adr/`](../adr/README.md).
 | [recording.md](recording.md) | Capture spec, chunking, concatenation into a single WAV (FR-2a, FR-3, FR-6) |
 | [storage.md](storage.md) | Session layout, filesystem-as-state, disk management, crash recovery (FR-7) |
 | [transcription.md](transcription.md) | Queue, scheduling, process, transcript format (FR-14–FR-18) |
-| [usb-offload.md](usb-offload.md) | FAT32 USB-stick offload on Pi 4B (FR-11) |
 | [install-service.md](install-service.md) | Installer steps and the systemd unit contract (FR-8, FR-10) |
 
 ## Conventions
 - **FR-n** identifiers are stable requirement IDs so the implementation and the
   companion `earshot-tui` can trace behavior back to a spec. IDs are never reused;
-  a retired requirement (e.g. FR-5, the removed speaker output) leaves a gap.
+  retired or reserved requirements leave gaps.
+
+Retired/reserved IDs:
+- `FR-5` — removed speaker/audio-output behavior.
+- `FR-11` — retired.
+- `FR-12` / `FR-13` — reserved by earlier drafts and intentionally unused in v1.0.
+
+Implementation notes:
 - *Implementation note* callouts flag intended implementation specifics (paths,
   unit fields, backends) that sit below the normative contract.

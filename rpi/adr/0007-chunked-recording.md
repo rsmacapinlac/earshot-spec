@@ -18,8 +18,6 @@ chunk and ends the session. Chunk duration is set via
   whole session.
 - No hard maximum session duration — recording continues until the button is
   pressed or the disk threshold is reached.
-- USB offload moves complete session directories, so chunking is transparent to
-  offload.
 
 > **Pipeline (see [Audio storage format](0001-audio-storage-format.md)):** `recording-NNN.wav`
 > chunks accumulate during recording for in-session crash resilience; at session

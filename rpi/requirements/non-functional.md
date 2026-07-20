@@ -1,12 +1,12 @@
 # Non-Functional Requirements
 
 ## NFR-1: No network dependency
-Recording, encoding, and transcription, all function offline.
+Recording, finalization, and transcription all function offline.
 
 ## NFR-2: Resilience
 - A crash or power loss after recording must not lose the raw audio.
-- A single chunk encoding failure does not terminate the session — recording
-  continues into the next chunk.
+- A session finalization failure does not delete the chunk WAVs; recovery is
+  retried later.
 
 See [../specs/storage.md](../specs/storage.md#crash-recovery) for the exact
 recovery contract.
@@ -18,5 +18,5 @@ recovery contract.
 
 ## Out of scope (v1)
 - Real-time / live transcription during recording
-- Speaker identification / diarization — see Constraints
+- Speaker identification / diarization — out of scope for v1 because v1 stores mono audio and does not perform speaker embeddings or enrollment.
 - Server-side transcription

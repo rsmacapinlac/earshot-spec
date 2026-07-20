@@ -6,14 +6,13 @@ The supported (and minimum) SBC is the **Raspberry Pi 4 Model B**.
 
 | | Pi 4B |
 |---|---|
-| Model | Raspberry Pi 4B (2 GB min, 4 GB recommended) |
-| RAM | 4 GB (8 GB variant also supported) |
+| Model | Raspberry Pi 4 Model B |
+| RAM | 2 GB min, 4 GB recommended (8 GB also supported) |
 | CPU | Cortex-A72 quad-core |
 | OS | Raspberry Pi OS Lite 64-bit |
-| USB offload | USB-A stick ([FR-11](../specs/usb-offload.md)) |
 
 > The **Pi 4B is the minimum**; smaller boards (Pi Zero 2W, Pi 3B/3B+) are **out of
-> scope**. Pi 5 is untested but likely fine.
+> scope**. Pi 5 is outside v1 validation scope; it may work, but it is unsupported.
 >
 > **Target OS:** Raspberry Pi OS (Debian 13 "trixie"), kernel 6.12.x.
 

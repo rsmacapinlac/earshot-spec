@@ -1,9 +1,8 @@
 # State Machine
 
-The application is a single-threaded state loop driven by the ReSpeaker button,
-with background threads for USB monitoring and the recording display timer. On
-the ReSpeaker HAT the **LED is the only feedback channel** (the display is a
-no-op).
+The application is a single-threaded control loop driven by the ReSpeaker button;
+transcription is offloaded to a cancellable worker thread (see [Concurrency](#concurrency)).
+On the ReSpeaker HAT the **LED is the only feedback channel**.
 
 ## LED states
 
@@ -14,9 +13,6 @@ no-op).
 | Recording | `255,0,0` | Red | Snap to solid, then slow pulse |
 | Finalizing (concatenation) | `255,180,0` | Amber | Slow pulse |
 | Transcribing | `255,179,0` | Amber | **Very** slow pulse (~1.5–2 s) |
-| USB transfer | `0,0,255` | Blue | Slow pulse |
-| USB transfer complete | `0,0,255` | Blue | Single flash |
-| USB transfer error | `255,128,0` | Orange | Slow pulse (until stick removed) |
 | Disk threshold reached | `255,128,0` | Orange | Slow pulse |
 | Recording too short (discarded) | `0,255,0` | Green | Double flash, then solid |
 | Shutting down | `255,255,255` | White | Slow pulse → fade to off |
@@ -37,7 +33,7 @@ no-op).
 - On startup the LED pulses **white** while booting; on ready it goes solid **green**.
 - If the disk threshold is already reached at startup, the LED pulses **orange**
   and the device waits for files to be removed (it does not accept recordings).
-- The app polls the button and the USB-present flag.
+- The app polls the button.
 - After ~180 s of idle with a non-empty transcription queue, the device enters
   **Transcribing** (see [transcription.md](transcription.md)).
 
@@ -74,10 +70,5 @@ no-op).
 ## Concurrency
 | Thread | Role |
 |---|---|
-| Main | State loop: idle ↔ record ↔ finalize ↔ transcribe ↔ USB ↔ shutdown |
-| `earshot-usb` | Polls every 2 s for removable-stick insert/remove; sets pending/error flags |
-| `earshot-rec-timer` | During recording, updates the (no-op) display with elapsed time each second |
+| Main | State loop: idle ↔ record ↔ finalize ↔ transcribe ↔ shutdown |
 | `earshot-transcribe-*` | Runs one session's transcription; cancellable via an event |
-
-USB insertion is handled at safe points: immediately if idle, or deferred until
-the current recording session finishes. See [usb-offload.md](usb-offload.md).

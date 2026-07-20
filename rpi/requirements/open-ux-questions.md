@@ -16,9 +16,9 @@ Resolved questions are folded into the relevant spec/requirement and dropped fro
 this registry; see `../CHANGELOG.md` for the record. The v1 decisions were:
 
 - **LED colour overload** — accepted for v1. The single LED reuses colours across
-  states (amber = encoding/transcribing, distinguished by pulse speed; orange =
-  disk-full/USB-error); the ambiguous cases are rare and low-stakes on a headless
-  device. See [`../specs/state-machine.md`](../specs/state-machine.md).
+  states (amber = finalizing/transcribing, distinguished by pulse speed); the
+  ambiguous cases are rare and low-stakes on a headless device. See
+  [`../specs/state-machine.md`](../specs/state-machine.md).
 - **Audio feedback** — out of scope; the LED is the sole feedback channel.
 - **Single-button gestures** — kept as-is (short press = start/stop, 3 s idle hold
   = safe shutdown, no confirmation); shutdown only fires while idle and captures

@@ -33,6 +33,7 @@ Relevant lines:
 ```
 dtparam=i2c_arm=on
 dtparam=i2s=on
+dtparam=spi=on
 dtoverlay=i2s-mmap
 dtoverlay=seeed-2mic-voicecard
 enable_uart=1

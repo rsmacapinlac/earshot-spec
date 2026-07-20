@@ -11,16 +11,20 @@ git clone https://github.com/rsmacapinlac/earshot.git ~/earshot
 bash ~/earshot/installer/install.sh
 ```
 The installer must:
+- Determine the install identity from the non-root login user running the install
+  (`$SUDO_USER` when invoked through `sudo`, otherwise `$USER`), then derive that
+  user's home directory, UID, and `<install_dir>` (default `~/earshot`).
 - Prompt for the HAT and write `hardware.hat = "respeaker"` to `config.toml`.
 - `apt update` and `apt upgrade`.
 - Install the ReSpeaker (seeed-voicecard) audio driver.
 - Apply the WM8960 capture front-end (ALC speech preset, see
   [recording.md](recording.md#capture-front-end-wm8960-alc)) and persist it to
   `/etc/voicecard/wm8960_asound.state` so it survives reboot.
-- Install system audio/media deps: `ffmpeg`, `dosfstools`, `mtools`.
+- Install system audio/media deps: `ffmpeg`.
 - Install faster-whisper and pre-download the default transcription model
   (`--no-transcription` skips this; see [transcription.md](transcription.md#fr-18-installer)).
-- Create a Python 3.11 venv and install all Python dependencies.
+- Create a Python venv (3.11+; uses the OS default interpreter) and install all
+  Python dependencies.
 - Install and enable the systemd service so Earshot starts on boot.
 
 **A reboot at the end is required** — the seeed-voicecard driver does not appear
@@ -55,24 +59,25 @@ The `earshot.service` unit:
 | Field | Value |
 |---|---|
 | `Description` | Earshot — on-device conversation recorder and transcriber |
-| `After` / `Wants` | `sound.target network.target` / `sound.target` |
+| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-no-network-dependency)) |
 | `Type` | `simple` |
-| `User` / `Group` | `ritchie` / `audio` |
-| `WorkingDirectory` | `/home/ritchie/earshot` |
-| `ExecStart` | `/home/ritchie/earshot/.venv/bin/python -m earshot` |
-| `ExecReload` | `/bin/kill -HUP $MAINPID` |
+| `User` / `Group` | `<install_user>` / `audio` |
+| `WorkingDirectory` | `<install_dir>` (default `/home/<install_user>/earshot`) |
+| `ExecStart` | `<install_dir>/.venv/bin/python -m earshot` |
+| `ExecReload` | _none_; use `systemctl restart earshot` to apply `config.toml` changes |
 | `Restart` / `RestartSec` | `on-failure` / `10` |
 | `TimeoutStartSec` | `90` |
 | `SupplementaryGroups` | `gpio spi i2c audio` |
 | `AmbientCapabilities` | `CAP_SYS_BOOT` |
-| Hardening | `NoNewPrivileges=true`, `PrivateTmp=true`, `ProtectSystem=full`, `ReadWritePaths=/home/ritchie/earshot` |
-| Environment | `PYTHONUNBUFFERED=1`, `XDG_RUNTIME_DIR=/run/user/1000` |
+| Hardening | `NoNewPrivileges=true`, `PrivateTmp=true`, `ProtectSystem=full`, `ReadWritePaths=<install_dir>` |
+| Environment | `PYTHONUNBUFFERED=1`; set `XDG_RUNTIME_DIR=/run/user/<install_uid>` only if required by the selected GPIO/SPI/audio libraries |
 | `WantedBy` | `multi-user.target` |
+
+`<install_user>`, `<install_uid>`, and `<install_dir>` are installer-rendered values;
+the unit must not hardcode a local development username or UID.
 
 Capability rationale:
 - `CAP_SYS_BOOT` — safe shutdown via `reboot(2)` (FR-4).
-- `CAP_SYS_MODULE` / `CAP_SYS_ADMIN` — **not granted**; they are not required for
-  Pi 4B USB-A offload.
 - Supplementary groups — access to the button (`gpio`), APA102 LEDs (`spi`), the
   codec control bus (`i2c`), and ALSA capture (`audio`).
 

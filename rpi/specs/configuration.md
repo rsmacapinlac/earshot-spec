@@ -34,17 +34,13 @@ Apply changes with `sudo systemctl restart earshot`.
 | `data_dir` | string | `"~/earshot"` | Base data directory. Recordings are written under `<data_dir>/recordings/`. |
 | `disk_threshold_percent` | int | `90` | Disk usage at which new recordings are blocked. |
 
-## `[display]`
-| Key | Type | Default | Description |
-|---|---|---|---|
-| `brightness` | int | `80` | Display brightness (0–100). No-op on the ReSpeaker HAT (no display). |
-
 ## `[transcription]`
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `enabled` | bool | `true` | Enable on-device transcription. `false` disables it (no amber state, no `transcript.md`). |
 | `model` | string | `"base.en"` | `"base.en"` (INT8, ~60 MB) default — more accurate on the Pi 4B. `"tiny.en"` (INT8, ~35 MB) is a faster, lighter alternative. |
 | `threads` | int | `2` | faster-whisper `cpu_threads`. Default 2 leaves headroom for recording on the 4-core CPU. |
+| `max_failures` | int | `3` | Maximum failed transcription attempts per session before writing `.failed_transcription` and skipping it. `0` retries forever. |
 
 ## Example `config.toml`
 ```toml
@@ -66,11 +62,9 @@ shutdown_hold_seconds = 3
 data_dir = "~/earshot"
 disk_threshold_percent = 90
 
-[display]
-brightness = 80
-
 [transcription]
 enabled = true
 model = "base.en"
 threads = 2
+max_failures = 3
 ```

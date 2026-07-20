@@ -7,8 +7,9 @@ Dependency isolation is needed for the Python application. Docker was considered
 as an alternative to a Python virtual environment.
 
 ## Decision
-Use a Python virtual environment (venv), not Docker. Minimum Python is **3.11**,
-which ships with the target Raspberry Pi OS — no extra Python install step.
+Use a Python virtual environment (venv), not Docker. Minimum Python is **3.11**;
+the target Raspberry Pi OS ships a newer interpreter (Python 3.13 on Debian 13
+"trixie"), so there is no extra Python install step.
 
 ## Consequences
 - No Docker daemon overhead (~50–100 MB RAM saved, meaningful on the 2 GB target).
@@ -21,5 +22,7 @@ which ships with the target Raspberry Pi OS — no extra Python install step.
   added complexity.
 - Docker remains a good fit for a future companion server/API — a separate concern.
 
-> **Implementation note:** the venv lives at `/home/ritchie/earshot/.venv`; the
-> service runs `/home/ritchie/earshot/.venv/bin/python -m earshot`.
+> **Implementation note:** the venv lives at `<install_dir>/.venv` (default
+> `/home/<install_user>/earshot/.venv`); the service runs
+> `<install_dir>/.venv/bin/python -m earshot`. The installer renders these paths
+> for the non-root login user running the install.

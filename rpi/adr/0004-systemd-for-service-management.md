@@ -16,8 +16,9 @@ Run Earshot as a systemd service, installed and enabled by the one-line installe
 - Standard `systemctl start/stop/restart/status earshot`.
 - No additional process supervisor required.
 
-> **Implementation note:** the unit runs as `User=ritchie`, `Group=audio`, with
+> **Implementation note:** the unit runs as the non-root login user selected by
+> the installer (`User=<install_user>`, `Group=audio`), with
 > `SupplementaryGroups=gpio spi i2c audio` for hardware access and
-> `AmbientCapabilities=CAP_SYS_BOOT` (poweroff via `reboot(2)`; no other
-> capabilities are required for Pi 4B USB-A offload). The full unit contract is in
+> `AmbientCapabilities=CAP_SYS_BOOT` (poweroff via `reboot(2)`). The full unit
+> contract is in
 > [specs/install-service.md](../specs/install-service.md#systemd-service-contract).
