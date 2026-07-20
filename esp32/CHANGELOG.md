@@ -106,7 +106,7 @@ current version is recorded in `../AGENTS.md`. Dates are ISO-8601 (YYYY-MM-DD).
   if the label is missing or fails to open.
 - **Experiments** documentation role (`AGENTS.md`): hypothesis-driven hardware
   validation plans that collect data to drive a design decision, located under
-  `firmware/experiments/` and named `NNNN-slug.md`.
+  `esp32/experiments/` and named `NNNN-slug.md`.
 - **Experiment 0001 — Timer-Wake-to-Check** (`experiments/0001-timer-wake-check.md`):
   validates a fixed ~5-min timer-wake battery check during sleep (so LOW/CRITICAL are
   detected while asleep). Includes documented assumptions (A1–A6), the data to
