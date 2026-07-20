@@ -8,11 +8,6 @@ Apply changes with `sudo systemctl restart earshot`.
 > parses. An earlier draft used a different schema (`[encoding]`, `[shutdown]`,
 > `storage.recordings_dir`); it is superseded — the keys below win.
 
-## `[hardware]`
-| Key | Type | Default | Values | Description |
-|---|---|---|---|---|
-| `hat` | string | `"respeaker"` | `"respeaker"` | Audio HAT to use. |
-
 ## `[audio]`
 | Key | Type | Default | Description |
 |---|---|---|---|
@@ -42,11 +37,23 @@ Apply changes with `sudo systemctl restart earshot`.
 | `threads` | int | `2` | faster-whisper `cpu_threads`. Default 2 leaves headroom for recording on the 4-core CPU. |
 | `max_failures` | int | `3` | Maximum failed transcription attempts per session before writing `.failed_transcription` and skipping it. `0` retries forever. |
 
+## `[web]`
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | bool | `true` | Serve the web UI ([web-ui.md](../requirements/web-ui.md)). |
+| `bind_address` | string | `"0.0.0.0"` | Interface to bind. Default binds all interfaces so the UI is reachable at the Pi's LAN IP (trusted-LAN, no auth — v1). |
+| `port` | int | `8080` | TCP port for the web UI. |
+
+## `[diarization]`
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | bool | `false` | Enable the OpenAI diarize action. Also requires a valid `api_key`; absent a key, diarize is unavailable regardless of this flag. |
+| `model` | string | `"gpt-4o-transcribe-diarize"` | OpenAI diarization model. |
+| `api_key` | string | `""` | OpenAI API key for diarization (FR-25). Empty disables diarization. Settable via the installer, this file, or the web UI (FR-26) — a key set from the UI is persisted here and applies to subsequent diarize actions without a restart. Since this is a secret, keep `config.toml` out of version control and restrict its permissions. |
+| `upload_format` | string | `"m4a"` | Compressed format the session audio is transcoded to before upload, so size stops binding (see TD-7). |
+
 ## Example `config.toml`
 ```toml
-[hardware]
-hat = "respeaker"
-
 [audio]
 sample_rate = 16000
 channels = 1
@@ -67,4 +74,15 @@ enabled = true
 model = "base.en"
 threads = 2
 max_failures = 3
+
+[web]
+enabled = true
+bind_address = "0.0.0.0"
+port = 8080
+
+[diarization]
+enabled = false
+model = "gpt-4o-transcribe-diarize"
+api_key = ""
+upload_format = "m4a"
 ```

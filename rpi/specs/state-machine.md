@@ -1,8 +1,9 @@
 # State Machine
 
-The application is a single-threaded control loop driven by the ReSpeaker button;
-transcription is offloaded to a cancellable worker thread (see [Concurrency](#concurrency)).
-On the ReSpeaker HAT the **LED is the only feedback channel**.
+The application is a single-threaded control loop driven by the ReSpeaker button and
+the web UI ([web-ui.md](../requirements/web-ui.md)); transcription is offloaded to a
+cancellable worker thread (see [Concurrency](#concurrency)). On the ReSpeaker HAT the
+LED is the **local** feedback channel; the web UI is the detailed one.
 
 ## LED states
 
@@ -33,13 +34,16 @@ On the ReSpeaker HAT the **LED is the only feedback channel**.
 - On startup the LED pulses **white** while booting; on ready it goes solid **green**.
 - If the disk threshold is already reached at startup, the LED pulses **orange**
   and the device waits for files to be removed (it does not accept recordings).
-- The app polls the button.
-- After ~180 s of idle with a non-empty transcription queue, the device enters
-  **Transcribing** (see [transcription.md](transcription.md)).
+- The app polls the button and serves the web UI.
+- Transcription and diarization are **initiated from the web UI**
+  ([web-ui.md](../requirements/web-ui.md)). While a web-initiated transcription runs,
+  the device is in **Transcribing** (see [transcription.md](transcription.md)).
 
 ## FR-2: Start recording
 - A button press while idle begins a session, provided the disk threshold is not
   reached (if it is, the press is ignored and the LED stays orange).
+- The web UI can start a recording as well (FR-23); button and web are equivalent and
+  act on the single active session.
 - If transcription is running when the button is pressed, it is cancelled
   immediately, the in-progress session returns to the **front** of the queue, and
   recording begins without delay.
@@ -50,13 +54,14 @@ On the ReSpeaker HAT the **LED is the only feedback channel**.
   and the LED **double-flashes green**.
 
 ## FR-3: Stop recording
-- A second button press ends the session (subject to minimum duration).
+- A second button press — or a stop from the web UI (FR-23) — ends the session
+  (subject to minimum duration).
 - The LED goes **amber** (finalizing) while chunks are concatenated into a single
   `session.wav`, then returns to solid **green**.
 - If concatenation fails, the error is logged and the chunk WAVs are retained; the
   LED still returns to green and recovery is retried on next boot.
-- Button presses are ignored during recording and post-recording processing —
-  new recordings are blocked until the device is idle again.
+- Button presses and web start/stop actions are ignored during post-recording
+  processing — new recordings are blocked until the device is idle again.
 
 ## FR-4: Safe shutdown
 - Holding the button for `shutdown_hold_seconds` (default 3 s) **while idle**

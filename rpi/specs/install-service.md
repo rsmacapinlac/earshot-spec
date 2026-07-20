@@ -36,6 +36,9 @@ sudo systemctl status earshot
 journalctl -u earshot -f
 arecord -l          # expect card 'seeed2micvoicec'
 ```
+Then browse to `http://<pi-ip>:<port>/` for the web UI (default port per
+[configuration.md](configuration.md#web)).
+
 Updates: `cd ~/earshot && git pull && bash installer/install.sh`.
 
 ## FR-10: Phone hotspot setup (optional)
@@ -59,7 +62,7 @@ The `earshot.service` unit:
 | Field | Value |
 |---|---|
 | `Description` | Earshot — on-device conversation recorder and transcriber |
-| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-no-network-dependency)) |
+| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no start-time network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-core-offline-operation)) |
 | `Type` | `simple` |
 | `User` / `Group` | `<install_user>` / `audio` |
 | `WorkingDirectory` | `<install_dir>` (default `/home/<install_user>/earshot`) |

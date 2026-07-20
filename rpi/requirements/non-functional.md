@@ -1,7 +1,9 @@
 # Non-Functional Requirements
 
-## NFR-1: No network dependency
-Recording, finalization, and transcription all function offline.
+## NFR-1: Core offline operation
+Recording, finalization, and local transcription all function offline; the web UI is
+served on the LAN and needs no internet. **Diarization (FR-25) is the one optional
+feature that requires internet** (OpenAI). The device is fully functional without it.
 
 ## NFR-2: Resilience
 - A crash or power loss after recording must not lose the raw audio.
@@ -18,5 +20,7 @@ recovery contract.
 
 ## Out of scope (v1)
 - Real-time / live transcription during recording
-- Speaker identification / diarization — out of scope for v1 because v1 stores mono audio and does not perform speaker embeddings or enrollment.
-- Server-side transcription
+- Summarization of transcripts (designed-for; exposed via the web UI later)
+- Server-side transcription **as the primary transcript path** — the local
+  faster-whisper transcript stays authoritative; OpenAI is used only for the optional
+  diarized transcript (FR-25).

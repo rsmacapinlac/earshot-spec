@@ -1,8 +1,8 @@
 # Transcription
 
-Opt-in on-device transcription with faster-whisper (CTranslate2). Runs during
-idle time only; never competes with recording. LED behavior:
-[state-machine.md](state-machine.md).
+Opt-in on-device transcription with faster-whisper (CTranslate2). **Initiated from the
+web UI** ([web-ui.md](../requirements/web-ui.md), FR-24); it never competes with
+recording. LED behavior: [state-machine.md](state-machine.md).
 
 > **Engine.** faster-whisper, imported as a Python library
 > (`from faster_whisper import WhisperModel`). Transcription reads **`session.wav`**
@@ -17,25 +17,25 @@ idle time only; never competes with recording. LED behavior:
 - The queue persists across reboots; a session stays pending until `transcript.md`
   or `.failed_transcription` is written.
 
-### FR-14a: Scheduling
-- Transcription runs only when idle **and** the queue is non-empty. The idle loop
-  arms a timer and enters transcription after **~180 s** of idle (re-armed each
-  check while the queue stays empty).
-- Starting a recording cancels in-progress transcription immediately; the session
-  returns to the **front** of the queue and recording takes priority.
-- On the next return to idle (after finalizing), the queue is re-checked and
-  transcription resumes from the front.
-- On boot, pending sessions are picked up once the device reaches idle.
+### FR-14a: Trigger
+- Transcription is initiated per session from the web UI
+  ([web-ui.md](../requirements/web-ui.md), FR-24).
+- **Recording preempts transcription:** starting a recording (button or web, FR-23)
+  cancels an in-progress transcription immediately and the session returns to the
+  **front** of the queue, to be re-run from the web UI afterward.
+- Pending sessions persist across reboots (FR-14) and are listed in the web UI for the
+  user to run; a "transcribe all" action processes them FIFO.
 
 ## FR-15: Process
 - The model is loaded once per queue run:
   `WhisperModel(model, device="cpu", download_root="~/.local/share/earshot/models", cpu_threads=threads)`.
-  A load failure aborts the run (retried next idle window).
+  A load failure aborts the run (retried on the next transcription run).
 - Each pending session's **`session.wav`** is transcribed (`transcribe_session`);
   faster-whisper decodes the WAV via ffmpeg and reads lazily during segment
   iteration.
 - Runs in a cancellable worker thread. Cancellation trigger:
-  - **Button press** → return `"button"` (start recording).
+  - **A new recording** (button or web UI, FR-23) → cancel; the session returns to the
+    front of the queue to be re-run later.
 - On success: write `transcript_raw.json` then `transcript.md`, delete any
   `.transcription_failures.json` retry-state file, update `status.json` to
   `transcribed` (+ `transcribed_at`), pop the session, and re-scan for newly
@@ -44,7 +44,8 @@ idle time only; never competes with recording. LED behavior:
   path and attempt count. Increment the persisted failure count in
   `.transcription_failures.json` so retries survive service restarts and reboots.
   If `transcription.max_failures = 0`, the session stays at the front of the queue
-  and is retried on the next idle window forever. If `max_failures > 0`, retry
+  and is retried on each subsequent transcription run indefinitely. If
+  `max_failures > 0`, retry
   until the persisted count reaches `max_failures`; then write
   `.failed_transcription`, delete `.transcription_failures.json`, and skip the
   session on future queue scans until `.failed_transcription` is manually deleted.
@@ -76,10 +77,26 @@ idle time only; never competes with recording. LED behavior:
 `transcript_raw.json` accompanies it with the raw segment structures.
 
 ## FR-17: LED
-- **Amber**, very slow pulse (~1.5–2 s) while transcribing — distinct from
-  warning orange.
-- Returns to solid **green** when the queue empties (no transition animation).
-- On the ReSpeaker HAT, the LED is the only transcription feedback.
+- **Amber**, very slow pulse (~1.5–2 s) while a web-initiated transcription runs —
+  distinct from warning orange.
+- Returns to solid **green** when it completes (no transition animation).
+- On the ReSpeaker HAT the LED is the local feedback; the web UI shows detailed
+  progress and failures (FR-24).
+
+## Diarization (FR-25)
+Diarization is a **separate, web-initiated action** — not part of the local transcribe
+path — and requires an OpenAI key. It sends the compressed session audio to OpenAI's
+`gpt-4o-transcribe-diarize` and writes a **separate `transcript_diarized.md`**, leaving
+the local `transcript.md` untouched (see [web-ui.md](../requirements/web-ui.md)).
+
+- Speakers are labelled from enrolled reference clips (FR-27) when available, else
+  generic `Speaker N`.
+- Sessions over OpenAI's per-request limits (25 MB / 1500 s) are compressed and split,
+  reusing references to keep labels stable across parts. The exact chunking/stitching
+  is **TD-7**, pending [experiment 0001](../experiments/0001-openai-diarization-mono-and-chunking.md).
+- Requires network + a valid key; a failure leaves the local transcript and audio
+  intact. Diarization does **not** affect the pending/failed state the transcribe queue
+  derives from the filesystem.
 
 ## FR-18: Installer
 - Installs `faster-whisper` via pip (no build step).
@@ -98,4 +115,5 @@ idle time only; never competes with recording. LED behavior:
 | `tiny.en` (lighter) | ~3–6 min |
 
 Default thread count is 2 (headroom for recording on the 4-core CPU). Transcription
-is idle-only, so the longer `base.en` runtime does not affect recording.
+is user-initiated and yields to recording (a new recording cancels it), so the longer
+`base.en` runtime never blocks capture.

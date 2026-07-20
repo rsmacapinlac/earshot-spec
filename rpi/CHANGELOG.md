@@ -8,6 +8,14 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ## [Unreleased]
 
 ### Added
+- **Web UI requirement** (`requirements/web-ui.md`): a LAN-served web UI (FR-19–FR-27)
+  to browse / listen / delete recordings, start/stop recording, initiate transcription,
+  and — with an OpenAI key — diarize sessions via `gpt-4o-transcribe-diarize` and enroll
+  named speakers. Trusted-LAN / no-auth in v1; the OpenAI key lives in `config.toml`
+  (`[diarization].api_key`) and is settable from the web UI.
+- **Experiment 0001** (`experiments/0001-openai-diarization-mono-and-chunking.md`):
+  validates OpenAI diarization quality on mono ReSpeaker audio and cross-part speaker
+  stitching (supports TD-7).
 - **Capture front-end spec** (`specs/recording.md`): the WM8960 is configured for
   ALC using Wolfson's speech preset (target −12 dBFS, fast 24 ms attack / 384 ms
   decay, noise gate + HPF on, Max Gain capped at 5 provisionally, on the captured
@@ -15,6 +23,21 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   `/etc/voicecard/wm8960_asound.state`.
 
 ### Changed
+- **Transcription is web-initiated** from the web UI, on demand
+  (`specs/transcription.md`, `specs/state-machine.md`).
+- **Recording control is now shared** between the button and the web UI (FR-23).
+- **Diarization added** via OpenAI `gpt-4o-transcribe-diarize`, gated on a configured
+  key; writes a separate `transcript_diarized.md` (`specs/transcription.md`,
+  `specs/storage.md`).
+- **Network framing qualified.** The app now serves a LAN web UI, and diarization needs
+  internet; `requirements/connectivity.md` and `non-functional.md` (NFR-1) updated —
+  recording and local transcription stay offline.
+- **Config additions** (`specs/configuration.md`): `[web]` and `[diarization]` sections.
+- **New technical decisions:** TD-5 (two-artifact diarized output) and TD-6
+  (named-speaker enrollment) resolved into `web-ui.md`; TD-7 (long-session upload to
+  OpenAI) open with an adopted approach pending experiment 0001.
+- **Backlog:** B-I1 (Web UI) promoted into the active requirements; B-T5
+  (summarization) added as a designed-for future item.
 - **TD-1 resolved and removed.** The capture-gain question (fixed PGA vs. ALC) is
   decided in favour of ALC and folded into `specs/recording.md`; the
   `reference/` front-end section now points to the spec. `ALC Max Gain` ships as a

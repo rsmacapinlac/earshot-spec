@@ -14,7 +14,7 @@ as the record.
 
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
-| _None yet._ | | | |
+| [0001](0001-openai-diarization-mono-and-chunking.md) | OpenAI diarization on mono capture & cross-part speaker stitching | TD-7 | Proposed |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise

@@ -17,6 +17,7 @@ Local file storage, filesystem-as-state, disk management, and crash recovery
 | `status.json` | at session end | `earshot-tui` status mirror (see below) |
 | `transcript.md` | after transcription | `earshot-tui`-compatible transcript |
 | `transcript_raw.json` | after transcription | raw faster-whisper segment data |
+| `transcript_diarized.md` | after diarization (optional) | speaker-labelled transcript from OpenAI; separate from `transcript.md`, does not affect pending/failed state |
 | `.transcription_failures.json` | after a failed transcription attempt | persisted retry count and last error; deleted after successful transcription |
 | `.failed_transcription` | after repeated transcription failure | retry-suppression marker; delete manually to retry |
 
