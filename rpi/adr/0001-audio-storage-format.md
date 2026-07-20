@@ -4,8 +4,9 @@
 
 ## Context
 
-Sessions are captured as chunked 16 kHz PCM WAV ([ADR-0007](0007-chunked-recording.md)).
-The stored, offloaded, and transcribed artifact needs a single defined format.
+Sessions are captured as chunked 16 kHz PCM WAV (see
+[Chunked recording](0007-chunked-recording.md)). The stored, offloaded, and
+transcribed artifact needs a single defined format.
 
 ## Decision
 
@@ -38,6 +39,3 @@ Rationale:
   above a single session.
 - The WAV is **mono** (the left mic); see
   [recording.md](../specs/recording.md#capture-spec).
-- **Implementation gap:** the running v0.2.2 app still captures stereo and encodes
-  to `session.opus`; it must be updated to capture mono and store `session.wav`
-  only to match this spec.

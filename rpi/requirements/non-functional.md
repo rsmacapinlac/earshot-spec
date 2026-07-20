@@ -17,10 +17,6 @@ recovery contract.
 | Pi 4B | 60 s |
 
 ## Out of scope (v1)
-- Wake-word detection (always button-triggered)
 - Real-time / live transcription during recording
-- Multi-device coordination
-- Web UI or local dashboard
 - Speaker identification / diarization — see Constraints
 - Server-side transcription
-- Audio feedback / speaker output (deferred to v2)

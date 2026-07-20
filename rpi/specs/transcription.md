@@ -6,7 +6,7 @@ idle time only; never competes with recording. LED behavior:
 
 > **Engine.** faster-whisper, imported as a Python library
 > (`from faster_whisper import WhisperModel`). Transcription reads **`session.wav`**
-> ([ADR-0001](../adr/0001-audio-storage-format.md)).
+> (see [Audio storage format](../adr/0001-audio-storage-format.md)).
 
 ## FR-14: Queue
 - Enabled unless `transcription.enabled = false`.

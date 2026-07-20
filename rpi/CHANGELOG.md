@@ -17,8 +17,8 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ### Changed
 - **TD-1 resolved and removed.** The capture-gain question (fixed PGA vs. ALC) is
   decided in favour of ALC and folded into `specs/recording.md`; the
-  `reference/` front-end section now points to the spec. Experiment 0001 is
-  reframed to validate the adopted preset and finalize the provisional Max Gain.
+  `reference/` front-end section now points to the spec. `ALC Max Gain` ships as a
+  starting value (5) to confirm on hardware during bring-up.
 - **TD-2 resolved and removed.** Capture is now **mono** (the left mic), not
   stereo: faster-whisper downmixes to mono anyway, the closely-spaced mics carry
   no usable stereo image, and mono halves the WAV size. A single channel is taken
@@ -35,45 +35,50 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   technical-decisions registry is now empty.
 - **UX-1/UX-2/UX-3 resolved and removed** — all kept the v1 behavior already in
   the specs: LED colour overload accepted (single LED, disambiguated by pulse
-  speed); audio feedback stays deferred to v2 (no speaker in the v1 build); and
-  the single-button gestures are unchanged (3 s idle hold = shutdown, no
-  confirmation — low-stakes since captures commit first). The UX registry is now
-  empty.
+  speed); audio feedback is out of scope; and the single-button gestures are
+  unchanged (3 s idle hold = shutdown, no confirmation — low-stakes since captures
+  commit first). The UX registry is now empty.
+- **Removed all speaker / audio-output content** — the hardware isn't present.
+  Dropped backlog B-A1/B-A2 (audio cues + volume), FR-5, the `AudioOutputInterface`
+  mention (hardware abstraction layer ADR), and the Speaker rows from `hardware.md`
+  and `reference/`.
+  The LED is the sole feedback channel.
+- **Backlog triaged.** Dropped B-T2 (installer model prompt) and B-I2 (Pi 5
+  support). **B-I1 (Web UI / dashboard) promoted to the next release.**
 
 ## [1.0] — 2026-07-19
 
 ### Added
-- **Initial RPi documentation set**, reverse-engineered from the running
-  implementation on host `pi-earshot-pi4` (app **v0.2.2**) and reconciled against
-  the actual code and device state. Structured to mirror the ESP `esp32/`
+- **Initial RPi documentation set** — the target specification for the Raspberry
+  Pi Earshot application (not yet built). Structured to mirror the ESP `esp32/`
   track: `requirements/`, `adr/`, `specs/`, `reference/`, `experiments/`.
 - **Requirements** (`requirements/`): product scope, supported hardware (Pi 4B +
   ReSpeaker 2-Mic HAT), non-functional targets, connectivity, and the
   `open-technical-decisions.md` (TD-n) / `open-ux-questions.md` (UX-n) registries.
-- **ADRs** (`adr/0001…0007, 0010`): imported from the implementation's own ADRs,
-  each carrying an *As-built* note where the original decision text had drifted
-  from the v0.2.2 code.
+- **ADRs** (`adr/`): audio storage format, Python venv over Docker, hardware
+  abstraction layer, systemd for service management, filesystem-as-state, and
+  chunked recording — each with an *Implementation note* flagging intended
+  implementation specifics.
 - **Specs** (`specs/`): normative configuration schema, state machine + LED table,
-  recording/encoding, storage/filesystem-state, transcription, USB offload, and
-  the installer + systemd service contract. `FR-n` identifiers preserved for
-  traceability to the code and `earshot-tui`.
+  recording, storage/filesystem-state, transcription, USB offload, and the
+  installer + systemd service contract. `FR-n` identifiers give the implementation
+  and `earshot-tui` stable requirement IDs to trace behavior to.
 - **Reference** (`reference/respeaker-2mic-hat.md`): ReSpeaker 2-Mic HAT hardware
-  facts and the observed WM8960 mixer/boot configuration.
-- **Experiments** (`experiments/`): scaffolding (README + TEMPLATE) and
-  Experiment 0001 (capture gain / ALC tuning).
+  facts and the expected WM8960 mixer/boot configuration.
+- **Experiments** (`experiments/`): scaffolding (README + TEMPLATE) for future
+  hardware validation.
 
-### Fixed (as-built corrections vs. the implementation's own docs)
-- The observed v0.2.2 device captures **stereo** (both mics); the spec targets
-  mono (see Unreleased).
-- Transcription engine is **faster-whisper**, not whisper.cpp.
-- Documented the **real `config.toml` schema** (`[audio].alsa_pcm`,
-  `[recording].shutdown_hold_seconds`, `[storage].data_dir`), not the older
-  `[encoding]`/`[shutdown]` schema in the source docs.
+### Decisions baked into the spec
+- Capture is **mono** (the left mic), 16 kHz / 16-bit PCM.
+- Transcription engine is **faster-whisper**.
+- The `config.toml` schema is `[audio].alsa_pcm`,
+  `[recording].shutdown_hold_seconds`, `[storage].data_dir` (not an
+  `[encoding]`/`[shutdown]` schema).
 
 ### Audio format
 - Audio is stored as a single **`session.wav`** (chunks concatenated at session
-  end); `session.wav` is the offloaded and transcribed artifact. See
-  [ADR-0001](adr/0001-audio-storage-format.md).
+  end); `session.wav` is the offloaded and transcribed artifact. See the
+  [audio storage format ADR](adr/0001-audio-storage-format.md).
 
 ### Notes
-- Scope is **Pi 4B + ReSpeaker + USB-A offload** (the as-built configuration).
+- Scope is **Pi 4B + ReSpeaker + USB-A offload**.

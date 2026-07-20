@@ -1,9 +1,9 @@
 # Earshot (RPi) — Specs Index
 
 Normative behavior for the Raspberry Pi Earshot: exact thresholds, file formats,
-state transitions, and contracts. These specs reflect the **as-built v0.2.2**
-code on `pi-earshot-pi4`; where the implementation's own docs disagreed, the code
-wins.
+state transitions, and contracts. These specs define the **target behavior** the
+implementation must meet; they are the authoritative source when other docs
+disagree.
 
 Product needs and scope: [`../requirements/`](../requirements/README.md).
 Rationale: [`../adr/`](../adr/README.md).
@@ -12,8 +12,8 @@ Rationale: [`../adr/`](../adr/README.md).
 
 | File | Covers |
 |---|---|
-| [configuration.md](configuration.md) | `config.toml` schema — every key, type, default (as-built) |
-| [state-machine.md](state-machine.md) | States, LED colour/pattern table, button semantics (FR-1–FR-5) |
+| [configuration.md](configuration.md) | `config.toml` schema — every key, type, default |
+| [state-machine.md](state-machine.md) | States, LED colour/pattern table, button semantics (FR-1–FR-4) |
 | [recording.md](recording.md) | Capture spec, chunking, concatenation into a single WAV (FR-2a, FR-3, FR-6) |
 | [storage.md](storage.md) | Session layout, filesystem-as-state, disk management, crash recovery (FR-7) |
 | [transcription.md](transcription.md) | Queue, scheduling, process, transcript format (FR-14–FR-18) |
@@ -21,7 +21,8 @@ Rationale: [`../adr/`](../adr/README.md).
 | [install-service.md](install-service.md) | Installer steps and the systemd unit contract (FR-8, FR-10) |
 
 ## Conventions
-- **FR-n** identifiers are carried over from the implementation's requirements so
-  they remain traceable to the code and to `earshot-tui`.
-- *As-built* callouts mark behavior verified against the running code/device that
-  differs from the implementation's own written docs.
+- **FR-n** identifiers are stable requirement IDs so the implementation and the
+  companion `earshot-tui` can trace behavior back to a spec. IDs are never reused;
+  a retired requirement (e.g. FR-5, the removed speaker output) leaves a gap.
+- *Implementation note* callouts flag intended implementation specifics (paths,
+  unit fields, backends) that sit below the normative contract.

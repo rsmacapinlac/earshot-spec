@@ -19,8 +19,7 @@ this registry; see `../CHANGELOG.md` for the record. The v1 decisions were:
   states (amber = encoding/transcribing, distinguished by pulse speed; orange =
   disk-full/USB-error); the ambiguous cases are rare and low-stakes on a headless
   device. See [`../specs/state-machine.md`](../specs/state-machine.md).
-- **Audio feedback** — LED-only in v1; audio cues deferred to v2 (the v1 build
-  ships no speaker). See backlog B-A1.
+- **Audio feedback** — out of scope; the LED is the sole feedback channel.
 - **Single-button gestures** — kept as-is (short press = start/stop, 3 s idle hold
   = safe shutdown, no confirmation); shutdown only fires while idle and captures
   are always committed first, so an accidental shutdown is low-stakes. See

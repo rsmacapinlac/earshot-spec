@@ -71,10 +71,6 @@ no-op).
   `CAP_SYS_BOOT`), falling back to `systemctl poweroff --no-wall`.
 - Button holds during recording or processing are ignored.
 
-## FR-5: Audio feedback *(deferred to v2)*
-Speaker output exists on some hardware but is unused. No `AudioOutputInterface`
-is implemented in v1. See [backlog B-A1/B-A2](../requirements/backlog.md).
-
 ## Concurrency
 | Thread | Role |
 |---|---|

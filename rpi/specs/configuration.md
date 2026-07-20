@@ -4,10 +4,9 @@ Earshot reads a single `config.toml` at `~/earshot/config.toml`. The installer
 creates it interactively. All keys have defaults; omitting a key uses the default.
 Apply changes with `sudo systemctl restart earshot`.
 
-> **As-built schema.** This documents the config the running device actually
-> parses. It differs from the implementation's own `configuration.md`, which
-> describes an older/aspirational schema (`[encoding]`, `[shutdown]`,
-> `storage.recordings_dir`). The keys below are authoritative.
+> **Authoritative schema.** The keys below define the config the application
+> parses. An earlier draft used a different schema (`[encoding]`, `[shutdown]`,
+> `storage.recordings_dir`); it is superseded — the keys below win.
 
 ## `[hardware]`
 | Key | Type | Default | Values | Description |
@@ -47,7 +46,7 @@ Apply changes with `sudo systemctl restart earshot`.
 | `model` | string | `"base.en"` | `"base.en"` (INT8, ~60 MB) default — more accurate on the Pi 4B. `"tiny.en"` (INT8, ~35 MB) is a faster, lighter alternative. |
 | `threads` | int | `2` | faster-whisper `cpu_threads`. Default 2 leaves headroom for recording on the 4-core CPU. |
 
-## As-built example (`pi-earshot-pi4`)
+## Example `config.toml`
 ```toml
 [hardware]
 hat = "respeaker"

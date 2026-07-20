@@ -1,7 +1,7 @@
 # Install & Service
 
 Installer contract (FR-8, FR-10) and the systemd unit that runs Earshot on boot
-([ADR-0004](../adr/0004-systemd-for-service-management.md)).
+(see [systemd for service management](../adr/0004-systemd-for-service-management.md)).
 
 ## FR-8: One-line install
 Full setup on a fresh Raspberry Pi OS Lite install, run as the normal login user
@@ -50,7 +50,7 @@ sudo nmcli connection add type wifi con-name "phone-hotspot" ssid "HotspotSSID" 
   ignores connection files with wrong permissions.
 
 ## systemd service contract
-As-built unit (`earshot.service`):
+The `earshot.service` unit:
 
 | Field | Value |
 |---|---|
@@ -64,19 +64,19 @@ As-built unit (`earshot.service`):
 | `Restart` / `RestartSec` | `on-failure` / `10` |
 | `TimeoutStartSec` | `90` |
 | `SupplementaryGroups` | `gpio spi i2c audio` |
-| `AmbientCapabilities` | `CAP_SYS_BOOT CAP_SYS_MODULE CAP_SYS_ADMIN` |
+| `AmbientCapabilities` | `CAP_SYS_BOOT` |
 | Hardening | `NoNewPrivileges=true`, `PrivateTmp=true`, `ProtectSystem=full`, `ReadWritePaths=/home/ritchie/earshot` |
 | Environment | `PYTHONUNBUFFERED=1`, `XDG_RUNTIME_DIR=/run/user/1000` |
 | `WantedBy` | `multi-user.target` |
 
 Capability rationale:
 - `CAP_SYS_BOOT` — safe shutdown via `reboot(2)` (FR-4).
-- `CAP_SYS_MODULE` / `CAP_SYS_ADMIN` — present in the as-built unit but **not
-  required** for Pi 4B USB-A offload; they can be dropped.
+- `CAP_SYS_MODULE` / `CAP_SYS_ADMIN` — **not granted**; they are not required for
+  Pi 4B USB-A offload.
 - Supplementary groups — access to the button (`gpio`), APA102 LEDs (`spi`), the
   codec control bus (`i2c`), and ALSA capture (`audio`).
 
-> **As-built:** the seeed-voicecard driver is a DKMS out-of-tree module; ALSA
-> config for the HAT lives under `/etc/voicecard/`, and the boot overlay
+> **Implementation note:** the seeed-voicecard driver is a DKMS out-of-tree
+> module; ALSA config for the HAT lives under `/etc/voicecard/`, and the boot overlay
 > `dtoverlay=seeed-2mic-voicecard` (plus `dtparam=i2s=on`, SPI) is added to
 > `/boot/firmware/config.txt`. See [../reference/respeaker-2mic-hat.md](../reference/respeaker-2mic-hat.md).

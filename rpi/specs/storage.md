@@ -1,7 +1,8 @@
 # Storage
 
 Local file storage, filesystem-as-state, disk management, and crash recovery
-(FR-7). The stored artifact is a single WAV ([ADR-0001](../adr/0001-audio-storage-format.md)).
+(FR-7). The stored artifact is a single WAV (see
+[Audio storage format](../adr/0001-audio-storage-format.md)).
 
 ## FR-7: Local storage
 - Recordings are saved locally and stay on the device until offloaded. 
@@ -18,7 +19,8 @@ Local file storage, filesystem-as-state, disk management, and crash recovery
 | `transcript_raw.json` | after transcription | raw faster-whisper segment data |
 
 ## Filesystem as state
-The filesystem is the source of truth — no database ([ADR-0006](../adr/0006-filesystem-as-state.md)).
+The filesystem is the source of truth — no database (see
+[Filesystem as state](../adr/0006-filesystem-as-state.md)).
 
 | Session directory contents | Meaning |
 |---|---|
@@ -30,13 +32,13 @@ The filesystem is the source of truth — no database ([ADR-0006](../adr/0006-fi
 authoritative:
 ```json
 { "status": "encoded" | "transcribed",
-  "device": "pi-earshot-pi4",
+  "device": "earshot-pi",
   "recorded_at": "2026-07-17T12:28:13.601387",
   "duration": 2604.8065,
   "transcribed_at": "2026-07-17T13:01:02.335633" }
 ```
-> `"encoded"` is a legacy status literal kept for `earshot-tui` compatibility; it
-> means capture was finalized to `session.wav` (no encode occurs).
+> The `"encoded"` literal is chosen for `earshot-tui` compatibility; it means
+> capture was finalized to `session.wav` (no encode stage occurs).
 
 ## Disk space management
 - Disk usage is checked before each new recording and continuously while blocked.

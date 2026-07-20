@@ -16,10 +16,10 @@ which ships with the target Raspberry Pi OS — no extra Python install step.
 - The seeed-voicecard kernel driver must be installed on the host OS regardless —
   Docker provides no benefit there.
 - Simpler systemd config — the service runs the venv Python binary directly (see
-  [ADR-0004](0004-systemd-for-service-management.md)).
+  [systemd for service management](0004-systemd-for-service-management.md)).
 - For a single-purpose device, Docker's isolation benefits don't outweigh the
   added complexity.
 - Docker remains a good fit for a future companion server/API — a separate concern.
 
-> **As-built:** the venv lives at `/home/ritchie/earshot/.venv`; the service runs
-> `/home/ritchie/earshot/.venv/bin/python -m earshot`.
+> **Implementation note:** the venv lives at `/home/ritchie/earshot/.venv`; the
+> service runs `/home/ritchie/earshot/.venv/bin/python -m earshot`.

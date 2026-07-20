@@ -3,7 +3,7 @@
 Covers audio capture, chunk rollover, and end-of-session concatenation into a
 single WAV (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in
 [storage.md](storage.md). Audio is stored as WAV — see
-[ADR-0001](../adr/0001-audio-storage-format.md).
+[Audio storage format](../adr/0001-audio-storage-format.md).
 
 ## Capture spec
 | Parameter | Value |
@@ -67,10 +67,11 @@ amixer -c $card sset 'ADC High Pass Filter' on
   there (`alsactl --file=/etc/voicecard/wm8960_asound.state store`) or they are
   lost on reboot. The installer applies and persists them (see
   [install-service.md](install-service.md#fr-8-one-line-install)).
-- **`ALC Max Gain` is provisional.** The index→dB mappings above are derived from
-  the WM8960 registers and should be read back on the device; the final Max Gain
-  (5 vs 7) and confirmation of no transcription regression are validated by
-  [Experiment 0001](../experiments/0001-capture-gain-alc.md).
+- **`ALC Max Gain` is a starting value.** The index→dB mappings above are derived
+  from the WM8960 registers and should be read back on the device during bring-up;
+  the final Max Gain (5 vs 7) is confirmed on hardware — raise toward 7 only if
+  distant speech is under-levelled and doing so adds no audible pumping/noise-floor
+  lift or transcription regression.
 - Front-end facts and the shipped default are in
   [../reference/respeaker-2mic-hat.md](../reference/respeaker-2mic-hat.md#capture-front-end).
 
@@ -104,12 +105,13 @@ On the button press that ends the session (LED → amber):
 2. **Retain `session.wav`** — it is the artifact used for transcription and USB
    offload.
 3. **Delete the `recording-*.wav` chunks** once `session.wav` is written, leaving
-   one copy of the audio on disk ([ADR-0001](../adr/0001-audio-storage-format.md)).
+   one copy of the audio on disk (see
+   [Audio storage format](../adr/0001-audio-storage-format.md)).
 4. Derive the session duration from `session.wav` (frame count ÷ sample rate) and
    write `status.json` (`status = "encoded"`, device hostname, `recorded_at`,
    `duration`).
-   > The status literal `"encoded"` is retained for `earshot-tui` compatibility
-   > even though no encode occurs; it means "capture finalized to `session.wav`."
+   > The status literal `"encoded"` is chosen for `earshot-tui` compatibility even
+   > though no encode occurs; it means "capture finalized to `session.wav`."
 5. Queue the session for transcription if enabled (see
    [transcription.md](transcription.md)); return to idle (green).
 

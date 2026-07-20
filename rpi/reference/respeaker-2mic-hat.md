@@ -1,7 +1,7 @@
 # Reference — Seeed ReSpeaker 2-Mic Pi HAT
 
-Non-normative hardware facts and the **observed** configuration on
-`pi-earshot-pi4` (captured 2026-07-19). This is the record behind
+Non-normative hardware facts and the **expected** device configuration for the
+ReSpeaker 2-Mic HAT on Raspberry Pi OS. This is the record behind
 [requirements/hardware.md](../requirements/hardware.md) and the capture spec in
 [specs/recording.md](../specs/recording.md).
 
@@ -18,8 +18,7 @@ LEDs). Three functional blocks, all in use:
 | RGB LEDs | 3× **APA102** chain over **SPI** | `spidev0.0` / `spidev0.1` | userspace (apa102-pi) |
 
 ## ALSA / driver
-- Card: **`seeed-2mic-voicecard`**, id `seeed2micvoicec` (card index varies; was
-  card 1 on the observed host).
+- Card: **`seeed-2mic-voicecard`**, id `seeed2micvoicec` (card index varies).
 - Codec node: `bcm2835-i2s-wm8960-hifi wm8960-hifi-0`.
 - Capture PCM used by Earshot: `plughw:CARD=seeed2micvoicec,DEV=0` (via `arecord`;
   `plughw` handles rate/format conversion).
@@ -30,7 +29,7 @@ LEDs). Three functional blocks, all in use:
   out-of-tree, expected).
 
 ## Boot configuration (`/boot/firmware/config.txt`)
-Relevant lines observed:
+Relevant lines:
 ```
 dtparam=i2c_arm=on
 dtparam=i2s=on
@@ -48,7 +47,7 @@ follows Wolfson's and the ReSpeaker community's guidance that voice capture on t
 codec should use ALC (fixed gain clips loud speech and under-records quiet speech;
 the HAT ships with ALC disabled).
 
-**Shipped default (observed on `pi-earshot-pi4`, before tuning):**
+**Shipped default (WM8960 driver default, before tuning):**
 
 | Control | Value | Meaning |
 |---|---|---|
@@ -75,4 +74,3 @@ usable stereo image) — see [specs/recording.md](../specs/recording.md#capture-
 |---|---|---|
 | Button | GPIO17, active-low | `PiButton`; reads HIGH when idle/released |
 | LEDs | APA102 ×3 on SPI `spidev0.0` | 1 LED used in v1; full RGB + patterns |
-| Speaker | none | HAT has no speaker; audio output deferred to v2 |

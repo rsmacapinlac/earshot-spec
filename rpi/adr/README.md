@@ -1,9 +1,12 @@
 # Architecture Decision Records (RPi)
 
 Significant architectural and technical decisions for the Raspberry Pi Earshot,
-with the context and reasoning behind them. Imported from the implementation
-repo's own ADRs and reconciled against the as-built v0.2.2 code; *As-built* notes
-flag where the original decision text no longer matches the running system.
+with the context and reasoning behind them. Each record carries an *Implementation
+note* flagging intended implementation specifics that sit below the decision
+itself.
+
+ADRs are referenced from other docs by title, not number, so the numbering can
+carry gaps (e.g. a retired ADR) without breaking references.
 
 ## Format
 - **Status** — Proposed, Accepted, Deprecated, or Superseded

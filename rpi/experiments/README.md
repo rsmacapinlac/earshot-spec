@@ -14,7 +14,7 @@ as the record.
 
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
-| [0001](0001-capture-gain-alc.md) | Validate ALC speech preset; finalize Max Gain | `specs/recording.md` (capture front-end) | Proposed |
+| _None yet._ | | | |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise

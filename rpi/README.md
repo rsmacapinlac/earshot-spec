@@ -17,9 +17,9 @@ This documentation set is **v1.0** (see [CHANGELOG.md](CHANGELOG.md) and
 4. After ~3 min idle, transcribes pending sessions with faster-whisper (LED **amber**).
 5. Hold the button 3 s while idle → safe shutdown.
 
-## Hardware (as-built)
+## Hardware
 
-- **Raspberry Pi 4 Model B** (running `pi-earshot-pi4`)
+- **Raspberry Pi 4 Model B**
 - **Seeed ReSpeaker 2-Mic Pi HAT** (WM8960 codec, 2 MEMS mics, GPIO17 button, 3× APA102 LEDs)
 
 ## Documentation map
@@ -29,5 +29,5 @@ This documentation set is **v1.0** (see [CHANGELOG.md](CHANGELOG.md) and
 | Product needs & scope | [`requirements/`](requirements/README.md) | Supported hardware, non-functional targets, connectivity, out-of-scope, open questions |
 | Technical decisions | [`adr/`](adr/README.md) | Why the major approaches were chosen |
 | Exact behavior (normative) | [`specs/`](specs/README.md) | Config schema, state machine, recording/encoding, storage, transcription, USB offload, install/service |
-| Hardware facts | [`reference/`](reference/respeaker-2mic-hat.md) | ReSpeaker 2-Mic HAT + observed device configuration |
+| Hardware facts | [`reference/`](reference/respeaker-2mic-hat.md) | ReSpeaker 2-Mic HAT hardware facts and expected device configuration |
 | Evidence for open decisions | [`experiments/`](experiments/README.md) | Hypothesis-driven hardware validation supporting TDs |

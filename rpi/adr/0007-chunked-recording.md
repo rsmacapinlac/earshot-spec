@@ -21,7 +21,7 @@ chunk and ends the session. Chunk duration is set via
 - USB offload moves complete session directories, so chunking is transparent to
   offload.
 
-> **Pipeline (see [ADR-0001](0001-audio-storage-format.md)):** `recording-NNN.wav`
+> **Pipeline (see [Audio storage format](0001-audio-storage-format.md)):** `recording-NNN.wav`
 > chunks accumulate during recording for in-session crash resilience; at session
 > end they are concatenated into a single **`session.wav`** and then deleted.
 > `session.wav` is the retained artifact. See
