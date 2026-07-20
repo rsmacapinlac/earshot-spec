@@ -1,31 +1,18 @@
 # AGENTS.md
 
-You are working in the **earshot spec repository**. Treat this repo as the source of product requirements, firmware specs, ADRs, and hardware references for the earshot project.
+You are working in the **earshot spec repository**. Treat this repo as the source of
+product requirements, firmware/software specs, ADRs, and hardware references for the
+earshot project. See the [root README](README.md) for the repo overview — the product
+tracks, their hardware, doc versions, and implementation repositories. This file covers
+the working conventions for editing the docs.
 
 ## Documentation roles
 
-Keep these boundaries clear:
+Keep these boundaries between folders clear. Read the "Documentation
+roles" in the core README.md.
 
-- **Requirements** describe product/user needs and cross-cutting qualities.
-- **Specs** define exact firmware behavior, file formats, thresholds, state transitions, and contracts.
-- **ADRs** explain important architectural choices and alternatives. Do not duplicate full specs in ADRs.
-- **Reference** documents hardware facts or non-normative bring-up/history notes.
-- **Experiments** collect data to drive a design decision. Each one names the open
-  decision it supports (a TD, or a pending ADR), states a hypothesis and success
-  criteria, runs a procedure that gathers measurements, and concludes with a
-  recommendation that updates the design. They are non-normative and time-bound —
-  the evidence trail behind a decision. An experiment that does not lead to a
-  decision does not belong here.
-
-Docs are organized by product track: `esp32/` (the ESP32-S3 e-paper firmware) and
-`rpi/` (the Raspberry Pi recorder application). Each track carries the same
-subdirectories. Within the relevant track: when a doc contains exact implementation
-behavior, prefer placing it in that track's `specs/`. When a doc explains why a
-major approach was chosen, use its `adr/`. When a doc validates or measures behavior
-on hardware to resolve an open question, use its `experiments/` (named
-`NNNN-slug.md`, sequential like ADRs). Once an experiment resolves something, fold
-the result into the relevant spec/ADR and update the related TD, leaving the
-experiment as the evidence record.
+Docs are organized by product track (eg `esp32/` and `rpi/` — see the [root
+README](README.md) for what each is). 
 
 ## Editing guidelines
 
@@ -40,36 +27,11 @@ experiment as the evidence record.
 
 Be concise, direct, and collaborative. The user is actively shaping product and firmware architecture; help clarify tradeoffs, then update the docs cleanly.
 
-## ESP32 Firmware Section
+## Implementation repositories
 
-The `esp32/` firmware documentation is **v1.7**. See `esp32/CHANGELOG.md` for the
-version history.
+Each track's code lives in its own GitHub repository (URLs and current doc versions
+are in the [root README](README.md); per-track history is in each `CHANGELOG.md`).
 
-The firmware implementation lives in the separate GitHub repository:
-
-```text
-https://github.com/rsmacapinlac/earshot-firmware
-```
-
-Only inspect a local checkout of that repository when explicitly asked to compare these specs to the current firmware implementation.
-
-## RPi Section
-
-The `rpi/` documentation is a **separate product** from the `esp32/` firmware
-track: a Raspberry Pi application (Pi 4B + Seeed ReSpeaker 2-Mic HAT) that records
-conversations locally and offloads audio via USB. It follows the same
-documentation roles and structure as the `esp32/` track
-(`requirements/`, `adr/`, `specs/`, `reference/`, `experiments/`).
-
-This RPi documentation is **v1.0**. See `rpi/CHANGELOG.md` for the version history.
-
-The implementation lives in the separate GitHub repository:
-
-```text
-https://github.com/rsmacapinlac/earshot
-```
-
-Only inspect a local checkout of that repository when explicitly asked to compare
-these specs to the current implementation.
-
+Only inspect a local checkout of an implementation repository when explicitly asked to
+compare these specs to the current implementation.
 
