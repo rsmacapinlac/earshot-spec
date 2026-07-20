@@ -73,18 +73,16 @@ idle time only; never competes with recording. LED behavior:
 ## FR-18: Installer
 - Installs `faster-whisper` via pip (no build step).
 - Pre-downloads the configured model to `~/.local/share/earshot/models/`
-  (default `tiny.en` INT8, ~35 MB).
+  (default `base.en` INT8, ~60 MB).
 - Writes `transcription.enabled` and `transcription.model` to `config.toml`.
 - `--no-transcription` skips the model download; users can also set
   `enabled = false` post-install.
 
 ## Performance
-| Target | Model | 15-min session |
-|---|---|---|
-| Pi 4B | `tiny.en` | ~3–6 min |
-| Pi 4B | `base.en` | ~7–13 min |
-| Pi Zero 2W | `tiny.en` (only supported) | ~7–18 min |
+| Model | 15-min session (Pi 4B) |
+|---|---|
+| `base.en` (default) | ~7–13 min |
+| `tiny.en` (lighter) | ~3–6 min |
 
-Default thread count is 2 (headroom for recording/encoding on the 4-core CPU).
-On the Pi Zero 2W, RAM (~130 MB model + inference) is the binding constraint and
-long sessions may queue for an extended period — expected behavior.
+Default thread count is 2 (headroom for recording on the 4-core CPU). Transcription
+is idle-only, so the longer `base.en` runtime does not affect recording.

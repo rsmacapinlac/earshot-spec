@@ -39,24 +39,36 @@ dtoverlay=seeed-2mic-voicecard
 enable_uart=1
 ```
 
-## Capture front-end tuning (observed WM8960 mixer state)
+## Capture front-end
+
+Earshot configures the WM8960 for **ALC (Automatic Level Control)** using the
+speech preset — the required configuration is normative in
+[specs/recording.md](../specs/recording.md#capture-front-end-wm8960-alc). This
+follows Wolfson's and the ReSpeaker community's guidance that voice capture on this
+codec should use ALC (fixed gain clips loud speech and under-records quiet speech;
+the HAT ships with ALC disabled).
+
+**Shipped default (observed on `pi-earshot-pi4`, before tuning):**
+
 | Control | Value | Meaning |
 |---|---|---|
 | `Capture` (analog PGA) | 39/63 → **+12 dB**, both channels on | Fixed input gain |
 | `ADC PCM` (digital) | 195/255 → **0 dB** | No digital trim |
 | `Left/Right Input Mixer Boost` | on | Mic path enabled |
 | `Left Boost Mixer LINPUT1` / `Right Boost Mixer RINPUT1` | on | Correct mic inputs selected |
-| `ALC Function` | **Off** | No automatic level control — gain is fixed |
+| `ALC Function` | **Off** | No automatic level control |
 | `Noise Gate` | **Off** | Room noise captured verbatim |
 | `ADC High Pass Filter` | stock | — |
 
-Implications (see [TD-1](../requirements/open-technical-decisions.md#td-1--capture-gain-fixed-pga-vs-alc)):
-- Capture level is a **fixed +12 dB** PGA. With ALC off, distant/quiet speech is
-  not boosted and close/loud speech can clip. The WM8960's ALC is available and
-  unused — a likely tuning lever for transcription accuracy.
-- Noise gate off means constant room noise is present (usually fine for Whisper).
-- Both mics are captured as true stereo and stored stereo in `session.wav`; for
-  speech-to-text this is largely redundant (see [TD-2](../requirements/open-technical-decisions.md#td-2--stored-wav-stereo-vs-mono)).
+The HAT has two mics, but Earshot stores **mono** from the **left** mic only
+(faster-whisper downmixes to mono anyway, and the closely-spaced mics carry no
+usable stereo image) — see [specs/recording.md](../specs/recording.md#capture-spec).
+
+**Sources:**
+[Wolfson WAN0140 — ALC for Portable Applications](https://statics.cirrus.com/pubs/appNote/WAN0140.pdf),
+[WM8960 datasheet](https://cdn.sparkfun.com/assets/a/3/a/7/4/WM8960_datasheet_v4.2.pdf),
+[Rhasspy — Ideal settings for ReSpeaker 2-Mic HAT](https://community.rhasspy.org/t/ideal-settings-for-respeaker-2-mic-hat/2122),
+[Seeed Studio Wiki — ReSpeaker 2-Mics Pi HAT](https://wiki.seeedstudio.com/ReSpeaker_2_Mics_Pi_HAT/).
 
 ## Peripherals summary
 | Peripheral | Address / line | Notes |
@@ -64,8 +76,3 @@ Implications (see [TD-1](../requirements/open-technical-decisions.md#td-1--captu
 | Button | GPIO17, active-low | `PiButton`; reads HIGH when idle/released |
 | LEDs | APA102 ×3 on SPI `spidev0.0` | 1 LED used in v1; full RGB + patterns |
 | Speaker | none | HAT has no speaker; audio output deferred to v2 |
-
-## Not part of the ReSpeaker
-The observed host also has a **Jabra SPEAK 510** USB speakerphone attached (ALSA
-USB-Audio card). It is **not** used by Earshot's capture path and is irrelevant to
-this HAT — noted only to avoid confusion when listing `arecord -l`.

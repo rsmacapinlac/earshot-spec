@@ -48,7 +48,7 @@ no-op).
   immediately, the in-progress session returns to the **front** of the queue, and
   recording begins without delay.
 - The LED goes to **red** (snap solid, then slow pulse) for the session duration.
-- Capture spec: **16 kHz, 16-bit PCM, stereo** (both mics). Details:
+- Capture spec: **16 kHz, 16-bit PCM, mono** (left mic). Details:
   [recording.md](recording.md).
 - Minimum duration (default 3 s) is enforced — a shorter recording is discarded
   and the LED **double-flashes green**.

@@ -16,7 +16,7 @@ Audio feedback for state transitions is deferred to v2. Requires an
 | ID | Item | Notes |
 |---|---|---|
 | B-T1 | `storage.require_transcript_before_offload` | Block USB offload until pending transcription completes. Deferred: offload-regardless is the safer default. |
-| B-T2 | `base.en` as installer option | `base.en` (INT8, ~60 MB) is more accurate on Pi 4B. Installer could prompt for model choice. |
+| B-T2 | Installer model-choice prompt | Default is `base.en`; a prompt could let users pick `tiny.en` for faster, lighter transcribes. |
 | B-T3 | Transcription retry limit | After N failures, write a `.failed_transcription` marker and move on instead of retrying indefinitely. |
 | B-T4 | Real-time / live transcription | Transcribe during recording. Significant complexity; out of scope until post-session transcription is stable. |
 

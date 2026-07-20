@@ -2,23 +2,21 @@
 
 ## Single-board computer
 
-The as-built device is a **Raspberry Pi 4 Model B**.
+The supported (and minimum) SBC is the **Raspberry Pi 4 Model B**.
 
-| | Pi 4B (as-built) | Pi Zero 2W (design intent) |
-|---|---|---|
-| Model | Raspberry Pi 4B (2 GB min, 4 GB recommended) | Raspberry Pi Zero 2W |
-| RAM | 4 GB (8 GB on `pi-earshot-pi4`) | 512 MB |
-| CPU | Cortex-A72 quad-core | Cortex-A53 quad-core |
-| OS | Raspberry Pi OS Lite 64-bit | Raspberry Pi OS Lite 64-bit |
-| USB offload | USB-A stick ([FR-11](../specs/usb-offload.md)) | USB OTG gadget mode |
-| Typical use | Office/home, desk-mounted | On the go, pocket-sized |
+| | Pi 4B |
+|---|---|
+| Model | Raspberry Pi 4B (2 GB min, 4 GB recommended) |
+| RAM | 4 GB (8 GB on `pi-earshot-pi4`) |
+| CPU | Cortex-A72 quad-core |
+| OS | Raspberry Pi OS Lite 64-bit |
+| USB offload | USB-A stick ([FR-11](../specs/usb-offload.md)) |
 
-> Pi 3B/3B+ (1 GB) are not supported. Pi 5 is untested.
+> The **Pi 4B is the minimum**; smaller boards (Pi Zero 2W, Pi 3B/3B+) are **out of
+> scope**. Pi 5 is untested but likely fine.
 >
 > **As-built:** the running host is `pi-earshot-pi4` on Raspberry Pi OS
-> (Debian 13 "trixie"), kernel 6.12.x. The Pi Zero 2W + USB-gadget-mode offload
-> path exists in the design but is not the running configuration; it is not
-> specified normatively in `specs/`.
+> (Debian 13 "trixie"), kernel 6.12.x.
 
 ## Audio HAT
 

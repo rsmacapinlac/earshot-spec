@@ -1,11 +1,7 @@
-# USB Offload (Pi 4B)
+# USB Offload
 
 Retrieve recordings by inserting a FAT32-formatted USB stick into a USB-A port on
 the Pi 4B (FR-11). LED behavior: [state-machine.md](state-machine.md).
-
-> **Scope.** Only the Pi 4B USB-A stick path is as-built. The Pi Zero 2W
-> USB-gadget-mode path is design intent, not implemented in the running code, and
-> is not specified here ([TD-3](../requirements/open-technical-decisions.md#td-3--pi-zero-2w--usb-gadget-offload-scope)).
 
 ## FR-11: USB stick offload
 

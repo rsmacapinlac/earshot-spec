@@ -18,7 +18,7 @@ Apply changes with `sudo systemctl restart earshot`.
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `sample_rate` | int | `16000` | Capture sample rate (Hz). |
-| `channels` | int | `2` | Capture channels (both ReSpeaker mics → stereo). |
+| `channels` | int | `1` | Capture channels — mono, the left ReSpeaker mic (see [recording.md](recording.md#capture-spec)). |
 | `bit_depth` | int | `16` | PCM bit depth. |
 | `alsa_pcm` | string | `"plughw:CARD=seeed2micvoicec,DEV=0"` | ALSA capture PCM for `arecord`. Use `plughw:` for rate/format conversion. |
 
@@ -44,7 +44,7 @@ Apply changes with `sudo systemctl restart earshot`.
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `enabled` | bool | `true` | Enable on-device transcription. `false` disables it (no amber state, no `transcript.md`). |
-| `model` | string | `"tiny.en"` | `"tiny.en"` (INT8, ~35 MB) default; `"base.en"` (INT8, ~60 MB) recommended on Pi 4B for accuracy. |
+| `model` | string | `"base.en"` | `"base.en"` (INT8, ~60 MB) default — more accurate on the Pi 4B. `"tiny.en"` (INT8, ~35 MB) is a faster, lighter alternative. |
 | `threads` | int | `2` | faster-whisper `cpu_threads`. Default 2 leaves headroom for recording on the 4-core CPU. |
 
 ## As-built example (`pi-earshot-pi4`)
@@ -54,7 +54,7 @@ hat = "respeaker"
 
 [audio]
 sample_rate = 16000
-channels = 2
+channels = 1
 bit_depth = 16
 alsa_pcm = "plughw:CARD=seeed2micvoicec,DEV=0"
 
@@ -72,6 +72,6 @@ brightness = 80
 
 [transcription]
 enabled = true
-model = "tiny.en"
+model = "base.en"
 threads = 2
 ```

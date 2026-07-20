@@ -14,6 +14,9 @@ The installer must:
 - Prompt for the HAT and write `hardware.hat = "respeaker"` to `config.toml`.
 - `apt update` and `apt upgrade`.
 - Install the ReSpeaker (seeed-voicecard) audio driver.
+- Apply the WM8960 capture front-end (ALC speech preset, see
+  [recording.md](recording.md#capture-front-end-wm8960-alc)) and persist it to
+  `/etc/voicecard/wm8960_asound.state` so it survives reboot.
 - Install system audio/media deps: `ffmpeg`, `dosfstools`, `mtools`.
 - Install faster-whisper and pre-download the default transcription model
   (`--no-transcription` skips this; see [transcription.md](transcription.md#fr-18-installer)).
@@ -68,8 +71,8 @@ As-built unit (`earshot.service`):
 
 Capability rationale:
 - `CAP_SYS_BOOT` — safe shutdown via `reboot(2)` (FR-4).
-- `CAP_SYS_MODULE` / `CAP_SYS_ADMIN` — reserved for USB-gadget module loading and
-  mounts on the Pi Zero 2W path (design intent; unused on the as-built Pi 4B).
+- `CAP_SYS_MODULE` / `CAP_SYS_ADMIN` — present in the as-built unit but **not
+  required** for Pi 4B USB-A offload; they can be dropped.
 - Supplementary groups — access to the button (`gpio`), APA102 LEDs (`spi`), the
   codec control bus (`i2c`), and ALSA capture (`audio`).
 

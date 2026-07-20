@@ -11,7 +11,7 @@ Local file storage, filesystem-as-state, disk management, and crash recovery
 
 | File | When | Notes |
 |---|---|---|
-| `recording-NNN.wav` (×N) | during recording, transiently | 16 kHz stereo PCM chunks; **deleted after `session.wav` is written** |
+| `recording-NNN.wav` (×N) | during recording, transiently | 16 kHz mono PCM chunks; **deleted after `session.wav` is written** |
 | `session.wav` | at session end | concatenated single WAV — the retained offload/transcription artifact |
 | `status.json` | at session end | `earshot-tui` status mirror (see below) |
 | `transcript.md` | after transcription | `earshot-tui`-compatible transcript |
@@ -44,7 +44,7 @@ authoritative:
   **orange** and new recordings are blocked.
 - The device recovers automatically once files are removed and usage drops below
   the threshold.
-- A WAV session is large (~3.8 MB/min stereo), so this threshold is the primary
+- A WAV session is large (~1.9 MB/min mono), so this threshold is the primary
   storage guard — offload frequently.
 
 ## Crash recovery

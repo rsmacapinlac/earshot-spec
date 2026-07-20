@@ -24,7 +24,7 @@ Rationale:
 
 ## Consequences
 
-- WAV is large: ~3.8 MB/min at 16 kHz stereo (≈165 MB for a 43-min session). The
+- WAV is large: ~1.9 MB/min at 16 kHz mono (≈83 MB for a 43-min session). The
   disk-threshold block (default 90%) is the primary storage guard — offload
   frequently. See [storage.md](../specs/storage.md#disk-space-management).
 - The post-recording (amber) window is **I/O-bound** — concatenating a large WAV,
@@ -36,8 +36,8 @@ Rationale:
   [storage.md](../specs/storage.md#crash-recovery).
 - USB offload moves `session.wav`; FAT32's 4 GB per-file limit is comfortably
   above a single session.
-- Whether the stored WAV should be stereo or mono (mono halves size at no
-  speech-to-text cost) is
-  [TD-2](../requirements/open-technical-decisions.md#td-2--stored-wav-stereo-vs-mono).
-- **Implementation gap:** the running v0.2.2 app still encodes to `session.opus`;
-  it must be updated to store `session.wav` only to match this spec.
+- The WAV is **mono** (the left mic); see
+  [recording.md](../specs/recording.md#capture-spec).
+- **Implementation gap:** the running v0.2.2 app still captures stereo and encodes
+  to `session.opus`; it must be updated to capture mono and store `session.wav`
+  only to match this spec.

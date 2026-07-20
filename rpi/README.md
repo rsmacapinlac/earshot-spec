@@ -7,9 +7,7 @@ it shares the Earshot name and philosophy (local-only capture, physical offload)
 but is a distinct implementation with its own hardware, software stack, and docs.
 
 This documentation set is **v1.0** (see [CHANGELOG.md](CHANGELOG.md) and
-`../AGENTS.md`). It was reverse-engineered from the running implementation on host
-`pi-earshot-pi4` (app v0.2.2); where the implementation's own docs disagreed with
-the as-built code, these docs follow the code.
+`../AGENTS.md`). 
 
 ## What it does
 
