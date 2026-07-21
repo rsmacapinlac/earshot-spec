@@ -13,7 +13,7 @@ This documentation set is **v1.0** (see [CHANGELOG.md](CHANGELOG.md) and
 1. Boots headless as a systemd service; LED pulses **white**, then solid **green** when idle.
 2. Press the button → records (LED pulses **red**), rolling over to a new WAV chunk every 15 min.
 3. Press again → finalizes the session by concatenating chunks (LED **amber**), then returns to **green**.
-4. Manage recordings from a **web UI** at the Pi's IP — browse, listen, delete, start/stop recording, and run transcription (faster-whisper, LED **amber**) on demand. With an OpenAI key, **diarize** a session into a speaker-labelled transcript.
+4. Manage recordings from a **web UI** at the Pi's IP — browse, listen, delete, start/stop recording, and run transcription (faster-whisper, LED **amber**) on demand. With an OpenAI key, **diarize** a session — replacing its single `transcript.md` with a speaker-labelled version.
 5. Hold the button 3 s while idle → safe shutdown.
 
 ## Hardware

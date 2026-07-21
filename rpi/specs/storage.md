@@ -15,9 +15,9 @@ Local file storage, filesystem-as-state, disk management, and crash recovery
 | `recording-NNN.wav` (×N) | during recording, transiently | 16 kHz mono PCM chunks; **deleted after `session.wav` is written** |
 | `session.wav` | at session end | concatenated single WAV — the retained transcription artifact |
 | `status.json` | at session end | `earshot-tui` status mirror (see below) |
-| `transcript.md` | after transcription | `earshot-tui`-compatible transcript |
-| `transcript_raw.json` | after transcription | raw faster-whisper segment data |
-| `transcript_diarized.md` | after diarization (optional) | speaker-labelled transcript from OpenAI; separate from `transcript.md`, does not affect pending/failed state |
+| `transcript.md` | after transcription | The single `earshot-tui`-compatible transcript. Local faster-whisper writes it by default; a diarize run **overwrites** it with the speaker-labelled version |
+| `transcript_raw.json` | after local transcription | raw faster-whisper segment data |
+| `transcript_diarized_raw.json` | after diarization (optional) | raw OpenAI `diarized_json`; its presence marks the current `transcript.md` as the diarized version (FR-20). Does not affect pending/failed state |
 | `.transcription_failures.json` | after a failed transcription attempt | persisted retry count and last error; deleted after successful transcription |
 | `.failed_transcription` | after repeated transcription failure | retry-suppression marker; delete manually to retry |
 
@@ -29,13 +29,14 @@ The filesystem is the source of truth — no database (see
 |---|---|
 | `recording-NNN.wav` only (no `session.wav`) | Recording in progress, or crashed before concatenation |
 | `session.wav`, no `transcript.md`, no `.failed_transcription` | Finalized; **pending transcription** |
-| `session.wav` + `transcript.md` | Fully processed |
+| `session.wav` + `transcript.md`, no `transcript_diarized_raw.json` | Transcribed (local) |
+| `session.wav` + `transcript.md` + `transcript_diarized_raw.json` | Transcribed and **diarized** — `transcript.md` is the speaker-labelled version |
 | `session.wav` + `.failed_transcription`, no `transcript.md` | Finalized; transcription failed and is **not pending** until the marker is removed |
 
 `status.json` mirrors the derived state for `earshot-tui` but is **not**
 authoritative:
 ```json
-{ "status": "encoded" | "transcribed",
+{ "status": "encoded" | "transcribed" | "diarized",
   "device": "earshot-pi",
   "recorded_at": "2026-07-17T12:28:13.601387",
   "duration": 2604.8065,

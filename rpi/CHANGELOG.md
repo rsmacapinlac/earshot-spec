@@ -27,15 +27,18 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   (`specs/transcription.md`, `specs/state-machine.md`).
 - **Recording control is now shared** between the button and the web UI (FR-23).
 - **Diarization added** via OpenAI `gpt-4o-transcribe-diarize`, gated on a configured
-  key; writes a separate `transcript_diarized.md` (`specs/transcription.md`,
+  key. Each session has a **single `transcript.md`**: local faster-whisper writes it by
+  default, and a diarize run **overwrites** it with the speaker-labelled version (the raw
+  OpenAI response is saved to `transcript_diarized_raw.json`, whose presence marks the
+  diarized state). No separate diarized transcript file (`specs/transcription.md`,
   `specs/storage.md`).
 - **Network framing qualified.** The app now serves a LAN web UI, and diarization needs
   internet; `requirements/connectivity.md` and `non-functional.md` (NFR-1) updated —
   recording and local transcription stay offline.
 - **Config additions** (`specs/configuration.md`): `[web]` and `[diarization]` sections.
-- **New technical decisions:** TD-5 (two-artifact diarized output) and TD-6
-  (named-speaker enrollment) resolved into `web-ui.md`; TD-7 (long-session upload to
-  OpenAI) open with an adopted approach pending experiment 0001.
+- **New technical decisions:** TD-5 (**single `transcript.md`; diarization overwrites it
+  in place**) and TD-6 (named-speaker enrollment) resolved into `web-ui.md`; TD-7
+  (long-session upload to OpenAI) open with an adopted approach pending experiment 0001.
 - **Backlog:** B-I1 (Web UI) promoted into the active requirements; B-T5
   (summarization) added as a designed-for future item.
 - **TD-1 resolved and removed.** The capture-gain question (fixed PGA vs. ALC) is

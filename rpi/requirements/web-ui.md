@@ -28,31 +28,40 @@ It also becomes the **trigger** for transcription and diarization.
 - **The OpenAI API key lives in `config.toml`** (`[diarization].api_key`) and can be
   set from either the installer/config file or the web UI (FR-26). Since `config.toml`
   now holds a secret, keep it out of version control and restrict its permissions.
-- **Transcription stays on-device.** Local faster-whisper (`base.en`) remains the
-  transcription engine (FR-24). The OpenAI key unlocks **diarization only**; it does
-  not move transcription to the cloud. The base product stays fully offline; only
-  diarization needs network.
+- **Local transcription is the default and the only offline path.** Local
+  faster-whisper (`base.en`) produces `transcript.md` with no key and no network
+  (FR-24). A configured OpenAI key adds the optional **diarize** action (FR-25);
+  un-diarized sessions stay fully offline and only an explicit diarize call uses the
+  network.
 - **Recording control is shared** (FR-23). The button and the web UI both start/stop
   the single active session; the LED and state machine reflect the same state
   regardless of which control acted.
-- **Diarization output is two separate artifacts** (TD-5, resolved): the local plain
-  `transcript.md` and a `diarized.md`.
+- **One transcript per session; diarization replaces it** (TD-5, resolved). Every
+  session has a single `transcript.md`. Local faster-whisper writes it by default;
+  running diarize **overwrites** `transcript.md` with the speaker-labelled version
+  (the OpenAI model transcribes and labels in one pass, so its output *is* the
+  transcript). No separate diarized file is kept.
 
 ## Diarization
 
 When an OpenAI key is configured, a session can be diarized via OpenAI's
 **`gpt-4o-transcribe-diarize`** model, which transcribes *and* labels speakers in a
 single `/v1/audio/transcriptions` call (`diarized_json`: per-segment speaker labels +
-timestamps). This is genuine acoustic diarization, produced independently of the local
-plain transcript.
+timestamps). Because the model produces a full transcript in the same pass, the diarized
+result **replaces** the session's `transcript.md` rather than sitting beside it — so
+there is never a second, divergent transcript of the same audio.
 
-- **Output:** a separate `transcript_diarized.md`, alongside the untouched local
-  `transcript.md` (TD-5).
+- **Output:** the diarized result **overwrites** `transcript.md`; the session's single
+  transcript becomes the speaker-labelled one (TD-5). The raw OpenAI response is saved to
+  `transcript_diarized_raw.json`, whose presence marks the current `transcript.md` as the
+  diarized version (FR-20 status). Diarization does not require a prior local transcript —
+  it can produce `transcript.md` on its own.
 - **Named speakers:** the UI enrolls speakers (FR-27) and passes their clips as
   `known_speaker_names[]` / `known_speaker_references[]`, so the transcript shows real
   names instead of `Speaker N`. Without enrollment, generic `Speaker N` labels are used.
-- **Requires network + a valid key;** without either the diarize action is unavailable
-  and transcription (FR-24) is unaffected.
+- **Requires network + a valid key;** without either the diarize action is unavailable.
+  On failure the existing `transcript.md` (if any) is left intact — the overwrite happens
+  only on success.
 - **Long sessions** exceed OpenAI's per-request limits (25 MB / 1500 s) and must be
   compressed and/or split, reusing the enrolled references to keep speaker identity
   consistent across parts. Mechanism and validation: **TD-7**.
@@ -75,7 +84,7 @@ This requirement is threaded into the specs/docs below:
 - `specs/transcription.md` — web-initiated trigger and the diarization path.
 - `specs/state-machine.md` — web-initiated start/stop (FR-23) and the Transcribing state.
 - `specs/configuration.md` — `[web]` and `[diarization]` settings.
-- `specs/storage.md` — the `transcript_diarized.md` artifact.
+- `specs/storage.md` — the single `transcript.md` and the `transcript_diarized_raw.json` marker.
 - `requirements/connectivity.md` / `non-functional.md` — LAN web UI, internet only for
   diarization.
 - `requirements/backlog.md` — B-I1 promoted; summarization tracked as B-T5.
@@ -85,6 +94,7 @@ The exact HTTP endpoints and payloads still await a dedicated `specs/web-ui.md`
 
 ## Open decisions
 
-TD-5 (two-artifact output) and TD-6 (named-speaker enrollment) are resolved and folded
-in above. Remaining: **TD-7** (long-session audio upload to OpenAI) in
+TD-5 (single `transcript.md`; diarization overwrites it) and TD-6 (named-speaker
+enrollment) are resolved and folded in above. Remaining: **TD-7** (long-session audio
+upload to OpenAI) in
 [open-technical-decisions.md](open-technical-decisions.md).

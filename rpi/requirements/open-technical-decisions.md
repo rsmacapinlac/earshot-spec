@@ -14,9 +14,10 @@ frames the decision; standalone entries have none yet.
 | -- | -------- | ------ | ----- |
 | TD-7 | Long-session audio upload to OpenAI diarization (per-request limits vs. multi-part sessions) | Open — approach adopted, validation pending | [web-ui.md](web-ui.md) + [exp 0001](../experiments/0001-openai-diarization-mono-and-chunking.md) |
 
-> TD-5 (separate `transcript_diarized.md`, keep `transcript.md`) and TD-6
-> (named-speaker enrollment **in scope**, FR-27) were resolved on 2026-07-20 and
-> folded into [web-ui.md](web-ui.md).
+> TD-5 (**a single `transcript.md`; diarization overwrites it in place** — no separate
+> diarized file; this supersedes the earlier two-artifact resolution) was re-decided on
+> 2026-07-21. TD-6 (named-speaker enrollment **in scope**, FR-27) was resolved on
+> 2026-07-20. Both are folded into [web-ui.md](web-ui.md).
 
 ## TD-7 — Long-session audio upload to OpenAI
 

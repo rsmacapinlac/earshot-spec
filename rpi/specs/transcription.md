@@ -36,10 +36,11 @@ recording. LED behavior: [state-machine.md](state-machine.md).
 - Runs in a cancellable worker thread. Cancellation trigger:
   - **A new recording** (button or web UI, FR-23) → cancel; the session returns to the
     front of the queue to be re-run later.
-- On success: write `transcript_raw.json` then `transcript.md`, delete any
-  `.transcription_failures.json` retry-state file, update `status.json` to
-  `transcribed` (+ `transcribed_at`), pop the session, and re-scan for newly
-  arrived sessions.
+- On success: write `transcript_raw.json` then `transcript.md` (removing any
+  `transcript_diarized_raw.json`, so re-transcribing a diarized session reverts it to a
+  plain local transcript), delete any `.transcription_failures.json` retry-state file,
+  update `status.json` to `transcribed` (+ `transcribed_at`), pop the session, and
+  re-scan for newly arrived sessions.
 - On failure: no transcript is written; the failure is logged with the session
   path and attempt count. Increment the persisted failure count in
   `.transcription_failures.json` so retries survive service restarts and reboots.
@@ -86,17 +87,22 @@ recording. LED behavior: [state-machine.md](state-machine.md).
 ## Diarization (FR-25)
 Diarization is a **separate, web-initiated action** — not part of the local transcribe
 path — and requires an OpenAI key. It sends the compressed session audio to OpenAI's
-`gpt-4o-transcribe-diarize` and writes a **separate `transcript_diarized.md`**, leaving
-the local `transcript.md` untouched (see [web-ui.md](../requirements/web-ui.md)).
+`gpt-4o-transcribe-diarize`, which transcribes and labels speakers in one pass, and
+**overwrites** the session's `transcript.md` with that speaker-labelled transcript; the
+raw response is saved to `transcript_diarized_raw.json` (see
+[web-ui.md](../requirements/web-ui.md)). There is only ever one `transcript.md` per
+session. Diarization does not require a prior local `transcript.md` — it can produce the
+transcript on its own.
 
 - Speakers are labelled from enrolled reference clips (FR-27) when available, else
   generic `Speaker N`.
 - Sessions over OpenAI's per-request limits (25 MB / 1500 s) are compressed and split,
   reusing references to keep labels stable across parts. The exact chunking/stitching
   is **TD-7**, pending [experiment 0001](../experiments/0001-openai-diarization-mono-and-chunking.md).
-- Requires network + a valid key; a failure leaves the local transcript and audio
-  intact. Diarization does **not** affect the pending/failed state the transcribe queue
-  derives from the filesystem.
+- Requires network + a valid key; on failure the existing `transcript.md` (if any) and
+  the audio are left intact — the overwrite happens only on success. Diarization does
+  **not** affect the pending/failed state the transcribe queue derives from the
+  filesystem.
 
 ## FR-18: Installer
 - Installs `faster-whisper` via pip (no build step).

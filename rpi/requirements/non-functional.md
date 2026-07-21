@@ -21,6 +21,7 @@ recovery contract.
 ## Out of scope (v1)
 - Real-time / live transcription during recording
 - Summarization of transcripts (designed-for; exposed via the web UI later)
-- Server-side transcription **as the primary transcript path** — the local
-  faster-whisper transcript stays authoritative; OpenAI is used only for the optional
-  diarized transcript (FR-25).
+- Server-side transcription **as the default transcript path** — local faster-whisper is
+  the default and only offline transcript engine. OpenAI is used only when a user
+  explicitly runs the optional diarize action (FR-25), which replaces that one session's
+  `transcript.md` with the speaker-labelled version.
