@@ -19,12 +19,13 @@ OS). The application never manages network connectivity.
 - Setup procedure: [../specs/install-service.md](../specs/install-service.md#fr-10-phone-hotspot-setup-optional).
 
 ## Application network surface (v1)
-The application does not *manage* connectivity (FR-9), but it is no longer network-free:
-- It serves a **web UI over the LAN** ([web-ui.md](web-ui.md)), bound to the Pi's IP on
-  a configured port. This is the app's only inbound network surface (trusted-LAN, no
-  auth in v1).
-- **Diarization** (FR-25) makes outbound calls to OpenAI and therefore needs internet.
-  It is the only feature that does; recording and local transcription stay fully offline.
+The application does not *manage* connectivity (FR-9), but it is no longer network-free.
+All of it is **LAN-only — nothing requires the internet** (NFR-1):
+- **Inbound:** a web UI over the LAN ([web-ui.md](web-ui.md)), bound to the Pi's IP on a
+  configured port. Trusted-LAN, no auth in v1.
+- **Outbound:** HTTP to an optional [processing service](../../service/README.md) at
+  `processing.service_url`. Unset or unreachable simply means transcription runs locally
+  and diarization is not offered; everything else is unaffected.
 
 ## Out of scope (v1)
 - USB / Bluetooth tethering

@@ -12,40 +12,63 @@ frames the decision; standalone entries have none yet.
 
 | ID | Decision | Status | Owner |
 | -- | -------- | ------ | ----- |
-| TD-7 | Long-session audio upload to OpenAI diarization (per-request limits vs. multi-part sessions) | Open — approach adopted, validation pending | [web-ui.md](web-ui.md) + [exp 0001](../experiments/0001-openai-diarization-mono-and-chunking.md) |
+| _None open._ | | | |
 
 > TD-5 (**a single `transcript.md`; diarization overwrites it in place** — no separate
 > diarized file; this supersedes the earlier two-artifact resolution) was re-decided on
-> 2026-07-21. TD-6 (named-speaker enrollment **in scope**, FR-27) was resolved on
-> 2026-07-20. Both are folded into [web-ui.md](web-ui.md).
+> 2026-07-21. TD-6 was **re-decided on 2026-07-21**: speaker naming is **post-hoc and
+> per-session** — diarization returns generic `Speaker N` and the user names each voice
+> afterward from a sample clip. Enrollment is **out of scope**, superseding the
+> 2026-07-20 resolution that put it in. Both are folded into [web-ui.md](web-ui.md).
+>
+> TD-7 (**long-session audio upload to OpenAI**) was **resolved on 2026-07-21**, and then
+> **dissolved entirely** later the same day when processing moved to the
+> [processing service](../../service/README.md): the service diarizes a whole recording in
+> one pass, so there is no per-request limit, no split, and no cross-part label problem to
+> decide about. The registry is empty.
 
-## TD-7 — Long-session audio upload to OpenAI
+## TD-7 — Dissolved 2026-07-21 (superseded by ADR-0010)
 
-**Verified limits** (`gpt-4o-transcribe-diarize`, checked 2026-07-20): **25 MB** per
-file and **1500 s (~25 min)** per request; accepts wav/mp3/m4a/mp4/webm;
-`chunking_strategy: "auto"` is required above 30 s and handles chunking **within a
-single request** (speaker identity stays consistent inside one request). Speaker
-labels are **not** correlated **across** separate requests — labels can flip.
+> **This decision no longer applies.** Its entire subject — OpenAI's per-request limits —
+> disappeared when diarization moved to open-source models on the processing service
+> ([rpi ADR-0010](../adr/0010-optional-processing-service.md),
+> [service ADR-0003](../../service/adr/0003-open-source-diarization.md)). Kept as the
+> record of a constraint that shaped the design for a day, and of how it was removed
+> rather than worked around.
 
-**Earshot math:** mono 16 kHz/16-bit is ~1.9 MB/min, so a raw WAV hits the 25 MB cap
-at ~13 min — *before* the 25-min duration cap. Compressing to a lossy format (m4a/mp3)
-removes size as the binding limit, leaving the **25-min duration cap** as the real
-ceiling per request.
+### Original resolution: split, don't stitch
 
-**Adopted approach (validation pending — [exp 0001](../experiments/0001-openai-diarization-mono-and-chunking.md)):**
-1. Compress `session.wav` to m4a/mp3 before upload so size stops binding.
-2. Sessions ≤ 25 min → one request with `chunking_strategy: "auto"`; speaker identity
-   is consistent, no stitching needed.
-3. Sessions > 25 min → split into ≤25-min parts and hold speaker identity across parts
-   by passing `known_speaker_references` — the enrolled clips from FR-27, or clips
-   auto-carved from part 1 when speakers aren't enrolled. This cross-part workaround is
-   community-recommended but **officially undocumented/experimental**.
+**Verified limits** (`gpt-4o-transcribe-diarize`, checked 2026-07-20): **25 MB** per file
+and **1500 s (~25 min)** per request; `chunking_strategy: "auto"` handles chunking
+**within** a single request, keeping speaker identity consistent inside it. Labels are
+**not** correlated **across** separate requests.
 
-**Still open:** validate the split-and-reference approach on real, mono ReSpeaker
-audio (label stability across parts, and overall diarization quality on closely-spaced
-mics) — [experiment 0001](../experiments/0001-openai-diarization-mono-and-chunking.md).
-If validation fails on quality, diarization isn't viable on the current capture
-hardware; if only cross-part stitching fails, cap diarizable sessions at 25 min.
+Sessions are stored as AAC 32 kbps m4a ([ADR-0001](../adr/0001-audio-storage-format.md))
+at ~0.24 MB/min, so a full 25-minute request is ~6 MB. Size never binds; the **25-min
+duration cap** is the only ceiling.
+
+**Resolution:**
+1. `session.m4a` is uploaded as stored — no compression step.
+2. Sessions ≤ 25 min → one request with `chunking_strategy: "auto"`.
+3. Sessions > 25 min → split into ≤25-min parts, each diarized independently. **No
+   attempt is made to correlate speaker labels across parts.** A speaker may appear as
+   `Speaker 1` in one part and `Speaker 3` in another; the UI lists every detected label
+   and the user names them (FR-27), which is what reconciles identity.
+
+**Why not carry labels across parts.** The only mechanism available is
+`known_speaker_references` — an undocumented, community-reported workaround. It was
+originally underwritten by speaker enrollment; when TD-6 made naming post-hoc, the clips
+would have had to be auto-carved by the application from part 1, unvetted, with no
+fallback if that failed. Post-hoc naming already solves the problem the references were
+solving, at the cost of naming a few extra labels on a split session — a
+deterministic, user-visible reconciliation instead of a speculative, invisible one.
+
+**Consequences.** No dependency on undocumented API behaviour; no clip-selection rule to
+specify or tune; long sessions remain diarizable. The cost is that a split session shows
+more `Speaker N` entries than there are people, and the user names each. Diarization
+quality on mono, closely-spaced-mic capture is **not** gated by a decision — the feature
+is opt-in, off by default, requires a user-supplied key, and is reversible by
+re-transcribing, so the user judges it directly.
 
 Resolved decisions are folded into the relevant spec/ADR and dropped from this
 registry; see `../CHANGELOG.md` for the record.

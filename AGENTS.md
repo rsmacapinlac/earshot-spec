@@ -11,8 +11,11 @@ the working conventions for editing the docs.
 Keep these boundaries between folders clear. Read the "Documentation
 roles" in the core README.md.
 
-Docs are organized by product track (eg `esp32/` and `rpi/` — see the [root
-README](README.md) for what each is). 
+Docs are organized by track — two device tracks (`esp32/`, `rpi/`) and one **optional**
+service track (`service/`); see the [root README](README.md) for what each is. Device
+tracks own capture, storage, and presentation. The service track owns heavier processing
+and is never a dependency: a device must remain fully useful without it. Keep that
+boundary — the service knows nothing about sessions or devices.
 
 ## Editing guidelines
 

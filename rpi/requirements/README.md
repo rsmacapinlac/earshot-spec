@@ -5,7 +5,7 @@
 | File | Description |
 |---|---|
 | [hardware.md](hardware.md) | Supported SBC and HAT — specs and capabilities |
-| [web-ui.md](web-ui.md) | LAN web UI: manage recordings, trigger transcription, OpenAI diarization (draft) |
+| [web-ui.md](web-ui.md) | LAN web UI: manage recordings, name sessions, device status, trigger transcription and diarization on the processing service (draft) |
 | [non-functional.md](non-functional.md) | Performance, resilience, and out-of-scope items |
 | [connectivity.md](connectivity.md) | WiFi (OS-managed) for SSH + the LAN web UI; only diarization needs internet |
 | [open-technical-decisions.md](open-technical-decisions.md) | Deferred engineering decisions (TD-n), with interim defaults |

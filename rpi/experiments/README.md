@@ -14,8 +14,15 @@ as the record.
 
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
-| [0001](0001-openai-diarization-mono-and-chunking.md) | OpenAI diarization on mono capture & cross-part speaker stitching | TD-7 | Proposed |
+| [0001](0001-storage-bitrate.md) | Storage bitrate for `session.m4a` | ADR-0001 | Proposed |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise
 implementation specs live in `../specs/`.
+
+> An earlier experiment 0001 planned to validate OpenAI diarization quality on mono
+> capture and cross-part speaker stitching (TD-7). It was replaced on 2026-07-21: TD-7
+> was closed by decision — long sessions are split without attempting cross-request label
+> continuity, and per-session speaker naming reconciles the labels — and diarization
+> quality needs no release gate, being opt-in, off by default, and reversible. The number
+> was reused because that experiment never ran and nothing referenced its results.

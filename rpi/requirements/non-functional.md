@@ -1,9 +1,17 @@
 # Non-Functional Requirements
 
-## NFR-1: Core offline operation
-Recording, finalization, and local transcription all function offline; the web UI is
-served on the LAN and needs no internet. **Diarization (FR-25) is the one optional
-feature that requires internet** (OpenAI). The device is fully functional without it.
+## NFR-1: Standalone, and no internet dependency
+**The device is fully functional on its own.** Recording, finalization, storage, playback,
+the web UI **and transcription** all run on the Pi with no service, no account, and no
+internet ([ADR-0010](../adr/0010-optional-processing-service.md)).
+
+**No earshot feature requires the internet.** An optional
+[processing service](../../service/README.md) on the LAN makes transcription much faster
+and adds diarization — the one capability the Pi cannot provide — but it is an upgrade,
+not a dependency. Remove it and the device falls back to local transcription.
+
+Capture must never depend on anything external: recording works with no network at all,
+and audio waits safely on the device until processing runs.
 
 ## NFR-2: Resilience
 - A crash or power loss after recording must not lose the raw audio.
@@ -21,7 +29,7 @@ recovery contract.
 ## Out of scope (v1)
 - Real-time / live transcription during recording
 - Summarization of transcripts (designed-for; exposed via the web UI later)
-- Server-side transcription **as the default transcript path** — local faster-whisper is
-  the default and only offline transcript engine. OpenAI is used only when a user
-  explicitly runs the optional diarize action (FR-25), which replaces that one session's
-  `transcript.md` with the speaker-labelled version.
+- **Local diarization.** Speaker labelling needs compute a Pi 4B does not have; it
+  requires a processing service or it is not offered.
+- Any cloud/third-party processing. Audio never leaves the local network, and no API key
+  exists anywhere in the system.

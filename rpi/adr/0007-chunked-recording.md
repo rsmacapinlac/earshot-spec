@@ -21,6 +21,6 @@ chunk and ends the session. Chunk duration is set via
 
 > **Pipeline (see [Audio storage format](0001-audio-storage-format.md)):** `recording-NNN.wav`
 > chunks accumulate during recording for in-session crash resilience; at session
-> end they are concatenated into a single **`session.wav`** and then deleted.
-> `session.wav` is the retained artifact. See
+> end they are concatenated and encoded into a single **`session.m4a`** and then
+> deleted. `session.m4a` is the retained artifact. See
 > [specs/recording.md](../specs/recording.md).

@@ -20,12 +20,21 @@ The installer must:
 - Apply the WM8960 capture front-end (ALC speech preset, see
   [recording.md](recording.md#capture-front-end-wm8960-alc)) and persist it to
   `/etc/voicecard/wm8960_asound.state` so it survives reboot.
-- Install system audio/media deps: `ffmpeg`.
+- Install system audio/media deps: `ffmpeg` (used to encode `session.m4a`).
 - Install faster-whisper and pre-download the default transcription model
-  (`--no-transcription` skips this; see [transcription.md](transcription.md#fr-18-installer)).
+  (`--no-transcription` skips this; see [processing.md](processing.md#fr-18-installer)).
+- Optionally prompt for a **processing service URL** and write `processing.service_url`.
+  Leaving it blank is the normal case: the device transcribes locally. It can be set later
+  from the web UI (FR-30).
+
 - Create a Python venv (3.11+; uses the OS default interpreter) and install all
   Python dependencies.
 - Install and enable the systemd service so Earshot starts on boot.
+
+> A fresh install transcribes on its own — no service, no key, no internet
+> ([ADR-0010](../adr/0010-optional-processing-service.md)). A
+> [processing service](../../service/README.md) is an optional upgrade that speeds
+> transcription up and adds diarization.
 
 **A reboot at the end is required** — the seeed-voicecard driver does not appear
 in ALSA until after reboot.
@@ -37,7 +46,10 @@ journalctl -u earshot -f
 arecord -l          # expect card 'seeed2micvoicec'
 ```
 Then browse to `http://<pi-ip>:<port>/` for the web UI (default port per
-[configuration.md](configuration.md#web)).
+[configuration.md](configuration.md#web)). Where the OS mDNS responder is running —
+Avahi, present in a default Raspberry Pi OS install — `http://<hostname>.local:<port>/`
+also resolves, using the hostname set at flash time. The IP form is the one that always
+works; earshot neither installs nor configures mDNS.
 
 Updates: `cd ~/earshot && git pull && bash installer/install.sh`.
 
@@ -62,7 +74,7 @@ The `earshot.service` unit:
 | Field | Value |
 |---|---|
 | `Description` | Earshot — on-device conversation recorder and transcriber |
-| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no start-time network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-core-offline-operation)) |
+| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no start-time network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-standalone-and-no-internet-dependency)) |
 | `Type` | `simple` |
 | `User` / `Group` | `<install_user>` / `audio` |
 | `WorkingDirectory` | `<install_dir>` (default `/home/<install_user>/earshot`) |

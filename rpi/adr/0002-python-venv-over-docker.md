@@ -20,7 +20,10 @@ the target Raspberry Pi OS ships a newer interpreter (Python 3.13 on Debian 13
   [systemd for service management](0004-systemd-for-service-management.md)).
 - For a single-purpose device, Docker's isolation benefits don't outweigh the
   added complexity.
-- Docker remains a good fit for a future companion server/API — a separate concern.
+- Docker remains a good fit for a server-side component — and is exactly what the
+  [processing service](../../service/README.md) uses. This decision is about the
+  **recorder**, which needs direct GPIO/SPI/ALSA access on the Pi; it says nothing about
+  where inference runs ([ADR-0010](0010-optional-processing-service.md)).
 
 > **Implementation note:** the venv lives at `<install_dir>/.venv` (default
 > `/home/<install_user>/earshot/.venv`); the service runs

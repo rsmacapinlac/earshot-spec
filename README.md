@@ -4,23 +4,34 @@ Source of truth for the **earshot** products and software requirements, firmware
 specs, architecture decisions, and hardware references. This repo holds documentation
 only; each product's implementation lives in its own repository (linked below).
 
-The earshot family of products is a virtual assistant for meetings. It can
-simply record or you can ask it to do more (eg. transcribe, diarize, summarize).
-It is local-first but not adverse to cloud / ai.
+The earshot family of products is a virtual assistant for meetings. It can simply record,
+or you can ask it to do more (eg. transcribe, diarize, summarize). It is **local-first**:
+audio and transcripts stay on hardware you own, and no feature requires the internet.
 
-## Product tracks
+## Tracks
 
-| Track | Product | Hardware | Docs version | Implementation |
-|---|---|---|---|---|
-| [`esp32/`](esp32/requirements/README.md) | Pocket e-paper **voice-note recorder** firmware | Waveshare ESP32-S3 1.54" e-Paper (ESP32-S3-PICO-1) | v1.7 | [rsmacapinlac/earshot-firmware](https://github.com/rsmacapinlac/earshot-firmware) |
-| [`rpi/`](rpi/README.md) | On-device **conversation recorder & transcriber** with a LAN web UI (transcribe / diarize) | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.0 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
+Two **devices** capture audio; one **service** turns it into transcripts.
+
+| Track | Kind | What it is | Runs on | Docs version | Implementation |
+|---|---|---|---|---|---|
+| [`esp32/`](esp32/requirements/README.md) | device | Pocket e-paper **voice-note recorder** firmware | Waveshare ESP32-S3 1.54" e-Paper (ESP32-S3-PICO-1) | v1.7 | [rsmacapinlac/earshot-firmware](https://github.com/rsmacapinlac/earshot-firmware) |
+| [`rpi/`](rpi/README.md) | device | Desk **conversation recorder** with a LAN web UI | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.0 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
+| [`service/`](service/README.md) | service *(optional)* | Faster **transcription**, and **diarization** over HTTP | any Docker host on your LAN | v0.1 (draft) | _not yet created_ |
+
+**The devices work on their own** — a Pi records and transcribes with no service, account,
+or internet. The service is an upgrade for anyone who has somewhere to run it: much faster
+transcription, and speaker diarization, which is the one thing a recorder genuinely cannot
+do. See [rpi ADR-0010](rpi/adr/0010-optional-processing-service.md) and
+[service ADR-0001](service/adr/0001-separate-processing-service.md).
 
 Each track is versioned as a whole; see its `CHANGELOG.md`
-([esp32](esp32/CHANGELOG.md), [rpi](rpi/CHANGELOG.md)) for history.
+([esp32](esp32/CHANGELOG.md), [rpi](rpi/CHANGELOG.md), [service](service/CHANGELOG.md))
+for history.
 
 ## Documentation roles
 
-Both tracks carry the same subdirectories, each with a distinct purpose:
+Every track carries the same subdirectories, each with a distinct purpose (the service
+track has no `reference/` or `experiments/` — it owns no hardware):
 
 | Directory | Holds |
 |---|---|

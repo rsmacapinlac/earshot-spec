@@ -6,7 +6,7 @@
 SQLite was previously chosen to track recording lifecycle and API upload state.
 With API sync removed, upload tracking disappears. The remaining state — whether
 recording chunks are still orphaned, whether a session has been finalized to
-`session.wav`, whether finalization failed, and whether a session is transcribed —
+`session.m4a`, whether finalization failed, and whether a session is transcribed —
 is representable directly by files in each session directory.
 
 ## Decision

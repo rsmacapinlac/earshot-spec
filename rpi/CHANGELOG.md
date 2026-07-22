@@ -8,14 +8,17 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ## [Unreleased]
 
 ### Added
-- **Web UI requirement** (`requirements/web-ui.md`): a LAN-served web UI (FR-19–FR-27)
-  to browse / listen / delete recordings, start/stop recording, initiate transcription,
-  and — with an OpenAI key — diarize sessions via `gpt-4o-transcribe-diarize` and enroll
-  named speakers. Trusted-LAN / no-auth in v1; the OpenAI key lives in `config.toml`
-  (`[diarization].api_key`) and is settable from the web UI.
-- **Experiment 0001** (`experiments/0001-openai-diarization-mono-and-chunking.md`):
-  validates OpenAI diarization quality on mono ReSpeaker audio and cross-part speaker
-  stitching (supports TD-7).
+- **Web UI requirement** (`requirements/web-ui.md`): a LAN-served web UI (FR-19–FR-29)
+  to browse / listen / delete recordings, start/stop recording, name sessions, show device
+  status, initiate transcription, and — with an OpenAI key — diarize sessions via
+  `gpt-4o-transcribe-diarize` and name the detected speakers. Trusted-LAN / no-auth in v1;
+  the OpenAI key lives in `config.toml` (`[diarization].api_key`) and is settable from the
+  web UI.
+- **Experiment 0001** (`experiments/0001-storage-bitrate.md`): validates the stored
+  AAC bitrate for `session.m4a` against a PCM control — transcription WER, listen-back,
+  and encode wall-clock (supports ADR-0001). Replaces an earlier 0001 that planned to
+  validate OpenAI diarization quality and cross-part stitching; that experiment never ran
+  and its decision (TD-7) was closed by decision instead.
 - **Capture front-end spec** (`specs/recording.md`): the WM8960 is configured for
   ALC using Wolfson's speech preset (target −12 dBFS, fast 24 ms attack / 384 ms
   decay, noise gate + HPF on, Max Gain capped at 5 provisionally, on the captured
@@ -23,6 +26,131 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   `/etc/voicecard/wm8960_asound.state`.
 
 ### Changed
+- **An optional processing service; the device still stands alone**
+  (`adr/0010-optional-processing-service.md` — new; `specs/processing.md` — renamed from
+  `transcription.md`; `specs/configuration.md`, `specs/state-machine.md`,
+  `specs/storage.md`, `specs/install-service.md`, `requirements/web-ui.md`,
+  `requirements/non-functional.md`, `requirements/connectivity.md`). Transcription runs
+  **locally by default** — a fresh Pi transcribes with no service, account, or internet.
+  Setting `processing.service_url` routes it to an
+  [earshot processing service](../service/README.md) on the LAN instead, which is far
+  faster and is the **only** way to enable diarization; clearing it falls back and nothing
+  is lost. A required service was drafted and reversed: a recorder that obliges you to
+  stand up and maintain a container is a different product from one you plug in.
+- **Diarization has no local path and no cloud path.** It needs compute a Pi 4B lacks, so
+  it requires a service or is not offered — stated plainly rather than papered over with a
+  third-party API. The OpenAI path is gone: no key, no cost, no 25-minute cap, no duplicate
+  speaker labels, and no internet dependency anywhere. **FR-26 retired**, **FR-30 added**
+  for optional service configuration and live capability status.
+- **Preemption survives, scoped to where the CPU is.** Local transcription yields to
+  recording; a service job does not, because the work is on another machine. One rule —
+  *whatever holds CPU on the Pi yields to capture* — with the route deciding whether
+  anything does (`specs/processing.md`, `specs/state-machine.md`).
+- **TD-7 dissolved and B-T6 promoted.** A service diarizes a whole recording in one pass,
+  so the per-request cap, the split, and the duplicate `Speaker N` entries have no subject
+  left (`requirements/open-technical-decisions.md`, `requirements/backlog.md`).
+- **NFR-1 rewritten — standalone, and no internet dependency.** Recording, storage,
+  playback, the web UI *and transcription* all work on the device alone; nothing anywhere
+  requires the internet (`requirements/non-functional.md`, `requirements/connectivity.md`).
+- **The device persists service job state.** `.job.json` in the session directory holds
+  the service's `job_id`, so a reboot mid-job resumes polling instead of resubmitting work
+  already done remotely. A local job needs no such record.
+  `.transcription_failures.json` / `.failed_transcription` are renamed
+  `.processing_failures.json` / `.failed_processing`. An unreachable service is reported as
+  a connection problem and does **not** burn per-session retries — transcription can fall
+  back to local in the meantime (`specs/storage.md`, `specs/processing.md`).
+- **`[hardware]` section added to the config schema** — `hardware.hat` was referenced by
+  the installer, `hardware.md`, and ADR-0003 but missing from the authoritative schema
+  (`specs/configuration.md`).
+- **TD-6 re-decided — speaker naming is post-hoc and per-session; enrollment is out of
+  scope.** Diarization always returns generic `Speaker N`; the user then plays a sample
+  clip of each detected voice and names it, and the names are substituted into that
+  session's `transcript.md`. The map persists in the per-session `session.json`. No
+  enrollment step, no cross-session speaker registry, no identity carried between
+  recordings. FR-27 rewritten (`requirements/web-ui.md`, `specs/transcription.md`,
+  `specs/storage.md`). **Consequence:** enrollment was the user-facing source of the
+  reference clips that hold identity across a split request — which is what led to TD-7
+  being closed by decision rather than by validation (below).
+- **Sessions are stored compressed — `session.m4a`, AAC-LC 32 kbps** (ADR-0001
+  re-decided; `specs/recording.md`, `specs/storage.md`, `specs/transcription.md`,
+  `specs/configuration.md`, `specs/state-machine.md`). Capture is unchanged and still
+  writes lossless PCM chunks for crash resilience; finalization now concatenates **and
+  encodes** them in a single `ffmpeg` pass (concat demuxer → AAC), writing no
+  intermediate full-length WAV. A 43-minute session drops from ~83 MB to ~10 MB, so a
+  59 GB card holds ~230 hours instead of ~28. Bitrate is tunable via
+  `recording.encode_bitrate_kbps`; container and codec are fixed. ADR-0001 was re-decided
+  in place rather than superseded — nothing had been built against the WAV format, and the
+  file is named by topic, so every existing link still resolves.
+- **Diarization no longer transcodes, and the two-phase preemption rule collapses.**
+  The stored file is already an accepted upload format, so a ≤25-min session uploads
+  as-is and a longer one is split with a stream copy. With no CPU-bound phase left,
+  diarization never contends with capture: it is never preempted and may be started
+  during a recording. Only local transcription still yields
+  (`specs/transcription.md`, `requirements/web-ui.md`).
+- **`diarization.upload_format` removed** — there is nothing left to transcode
+  (`specs/configuration.md`). TD-7's compression step is likewise gone; its "Earshot
+  math" now shows a full 25-minute request at ~6 MB, so size never binds
+  (`requirements/open-technical-decisions.md`).
+- **The `"encoded"` status literal became truthful.** It was retained for `earshot-tui`
+  compatibility with a note that no encode occurred; one now does.
+- **Backlog B-T6 — open-source / self-hosted diarization** (`requirements/backlog.md`).
+  Logged as the alternative that would remove the constraint behind TD-7 rather than work
+  around it: the 25-min split, the API key, the per-session cost, and NFR-1's single
+  network dependency all follow from the chosen provider, not from the problem. Notes the
+  reframing that makes it tractable — earshot already transcribes locally, so it needs
+  only speaker turns, not a transcribe-and-diarize service — plus candidates
+  (pyannote.audio, WhisperX, sherpa-onnx) and the Pi 4B capacity caveat.
+- **TD-7 resolved — long sessions are split, not stitched.** Sessions over OpenAI's
+  25-minute per-request limit are split into ≤25-min parts and diarized independently,
+  with **no attempt to correlate speaker labels across parts**. The only mechanism for
+  that was `known_speaker_references`, an undocumented workaround that TD-6 left with no
+  vetted source of clips. Post-hoc naming (FR-27) already reconciles identity: the UI
+  lists every part's labels and the user names them, so a 43-minute two-person meeting is
+  four names instead of two. This removes the undocumented dependency, the auto-carving
+  step, and its unspecified clip-selection rule
+  (`requirements/open-technical-decisions.md`, `requirements/web-ui.md`,
+  `specs/transcription.md`). The technical-decisions registry is now empty.
+- **Diarization quality is not a release gate.** It is opt-in, off by default, requires a
+  user-supplied key, and is reversible by re-transcribing, so the user judges it on their
+  own audio rather than it blocking v1 (`requirements/web-ui.md`).
+- **Storage bitrate flagged provisional.** 32 kbps ships, but is to be confirmed during
+  bring-up — the same treatment as `ALC Max Gain` — because the encode is one-way
+  (`specs/recording.md`, `specs/configuration.md`).
+- **Session identity is now an allocated `rec-NNNNNN` ID, not a timestamp**
+  (`adr/0008-session-identity.md` — new; `specs/storage.md`, `specs/recording.md`,
+  `specs/transcription.md`, `requirements/web-ui.md`). The Pi 4B has no RTC and NFR-1
+  requires offline recording, so a cold boot without a network named sessions from a
+  clock known to be wrong — mis-ordering the FIFO queue and propagating a wrong date into
+  the transcript. Since the button-press path has no time source at all, the dependency
+  was removed rather than supplied: IDs are allocated `max + 1` over existing `rec-*`
+  directories, with an optional non-authoritative `.next_id` hint. Queue order is now
+  true capture order unconditionally. Matches the ESP32 track's identity model.
+- **Capture time demoted to metadata.** `status.json` keeps `recorded_at` as descriptive
+  information only — nothing sorts, looks up, or recovers by it, and it stays a true
+  mirror because it is re-derivable from the session directory's creation time if lost or
+  rebuilt. That same fallback covers crash recovery, where the in-memory start time is
+  gone (`specs/storage.md`).
+- **Session naming (FR-29).** A session can be given an optional free-text name from the
+  web UI at any point, including mid-recording; the UI leads with it and falls back to the
+  session ID. `transcript.md` **drops the recording timestamp from its header** in favour
+  of the name (or the ID when unnamed), plus a `**Session:**` line carrying the ID;
+  renaming rewrites that header in place. `**Processed:**` is the only clock-derived field
+  left in the transcript, and is descriptive only.
+- **`speakers.json` consolidated into `session.json`.** One per-session file now holds
+  everything the user authored — the session name and the `Speaker N` → name map —
+  keeping user-authored labels out of the rebuildable `status.json` mirror, which the
+  app is entitled to regenerate. Both keys optional; an absent or unparseable file means
+  "unnamed" and is never an error (`specs/storage.md`).
+- **Device status added as a parity item (FR-28).** The web UI continuously shows the
+  state the LED reflects (booting / ready / recording / finalizing / processing / disk
+  threshold). Record, stop, *and status* are now all parity capabilities across the two
+  surfaces; the disk-threshold condition is no longer LED-only on a headless device.
+- **FR-26: the OpenAI key is write-only.** The stored value is never returned to the
+  browser or pre-filled into the field — only a masked fingerprint is shown.
+- **FR-20 display wording:** pending renders as "Audio only", diarized as "Transcribed
+  with Speakers".
+- **`.failed_transcription` is cleared by the UI's Retry action** (FR-24), not only by
+  manual deletion (`specs/storage.md`).
 - **Transcription is web-initiated** from the web UI, on demand
   (`specs/transcription.md`, `specs/state-machine.md`).
 - **Recording control is now shared** between the button and the web UI (FR-23).
@@ -38,7 +166,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 - **Config additions** (`specs/configuration.md`): `[web]` and `[diarization]` sections.
 - **New technical decisions:** TD-5 (**single `transcript.md`; diarization overwrites it
   in place**) and TD-6 (named-speaker enrollment) resolved into `web-ui.md`; TD-7
-  (long-session upload to OpenAI) open with an adopted approach pending experiment 0001.
+  (long-session upload to OpenAI) subsequently resolved as split-without-stitching.
 - **Backlog:** B-I1 (Web UI) promoted into the active requirements; B-T5
   (summarization) added as a designed-for future item.
 - **TD-1 resolved and removed.** The capture-gain question (fixed PGA vs. ALC) is

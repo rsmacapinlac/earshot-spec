@@ -12,14 +12,14 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 | Booting | `255,255,255` | White | Slow pulse |
 | Ready / idle | `0,255,0` | Green | Solid |
 | Recording | `255,0,0` | Red | Snap to solid, then slow pulse |
-| Finalizing (concatenation) | `255,180,0` | Amber | Slow pulse |
-| Transcribing | `255,179,0` | Amber | **Very** slow pulse (~1.5–2 s) |
+| Finalizing (encode) | `255,180,0` | Amber | Slow pulse |
+| Processing (transcribe / diarize) | `255,179,0` | Amber | **Very** slow pulse (~1.5–2 s) |
 | Disk threshold reached | `255,128,0` | Orange | Slow pulse |
 | Recording too short (discarded) | `0,255,0` | Green | Double flash, then solid |
 | Shutting down | `255,255,255` | White | Slow pulse → fade to off |
 
 > Amber (`#FFB300`/`#FFB400`) is deliberately distinct from warning orange
-> (`#FF8000`): more yellow, and the transcription variant pulses slower.
+> (`#FF8000`): more yellow, and the processing variant pulses slower.
 
 ### Pattern definitions
 | Pattern | Description |
@@ -36,17 +36,22 @@ LED is the **local** feedback channel; the web UI is the detailed one.
   and the device waits for files to be removed (it does not accept recordings).
 - The app polls the button and serves the web UI.
 - Transcription and diarization are **initiated from the web UI**
-  ([web-ui.md](../requirements/web-ui.md)). While a web-initiated transcription runs,
-  the device is in **Transcribing** (see [transcription.md](transcription.md)).
+  ([web-ui.md](../requirements/web-ui.md)) — neither has a button gesture — and are
+  transcription runs locally by default, and diarization requires a configured processing
+  service. While a job is in flight the device is in **Processing**; at most one runs at a
+  time ([processing.md](processing.md#processing-jobs)).
 
 ## FR-2: Start recording
 - A button press while idle begins a session, provided the disk threshold is not
   reached (if it is, the press is ignored and the LED stays orange).
 - The web UI can start a recording as well (FR-23); button and web are equivalent and
   act on the single active session.
-- If transcription is running when the button is pressed, it is cancelled
-  immediately, the in-progress session returns to the **front** of the queue, and
-  recording begins without delay.
+- **Local transcription yields to recording.** If one is running when a recording starts
+  (button or web), it is cancelled immediately, the session returns to the **front** of the
+  queue, and recording begins without delay — it holds CPU on the capturing machine.
+- **A job on a [processing service](../../service/README.md) does not.** The work is on
+  another machine, so it continues alongside the recording, neither degraded nor
+  cancelled ([processing.md](processing.md#preemption)).
 - The LED goes to **red** (snap solid, then slow pulse) for the session duration.
 - Capture spec: **16 kHz, 16-bit PCM, mono** (left mic). Details:
   [recording.md](recording.md).
@@ -56,9 +61,9 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 ## FR-3: Stop recording
 - A second button press — or a stop from the web UI (FR-23) — ends the session
   (subject to minimum duration).
-- The LED goes **amber** (finalizing) while chunks are concatenated into a single
-  `session.wav`, then returns to solid **green**.
-- If concatenation fails, the error is logged and the chunk WAVs are retained; the
+- The LED goes **amber** (finalizing) while the chunks are concatenated and encoded into
+  a single `session.m4a`, then returns to solid **green**.
+- If the encode fails, the error is logged and the chunk WAVs are retained; the
   LED still returns to green and recovery is retried on next boot.
 - Button presses and web start/stop actions are ignored during post-recording
   processing — new recordings are blocked until the device is idle again.
@@ -75,5 +80,8 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 ## Concurrency
 | Thread | Role |
 |---|---|
-| Main | State loop: idle ↔ record ↔ finalize ↔ transcribe ↔ shutdown |
-| `earshot-transcribe-*` | Runs one session's transcription; cancellable via an event |
+| Main | State loop: idle ↔ record ↔ finalize ↔ process ↔ shutdown |
+| `earshot-job-*` | Runs one session's job — locally via faster-whisper (cancellable), or by submitting to the processing service and polling it |
+
+At most one job worker exists at a time ([processing.md](processing.md#processing-jobs)).
+A **service** job coexists freely with **Recording**; a **local** one is cancelled by it.

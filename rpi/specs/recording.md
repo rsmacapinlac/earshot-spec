@@ -1,8 +1,9 @@
 # Recording
 
-Covers audio capture, chunk rollover, and end-of-session concatenation into a
-single WAV (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in
-[storage.md](storage.md). Audio is stored as WAV — see
+Covers audio capture, chunk rollover, and end-of-session encoding into a single
+**`session.m4a`** (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in
+[storage.md](storage.md). Capture is lossless PCM; the retained artifact is
+compressed — see
 [Audio storage format](../adr/0001-audio-storage-format.md).
 
 ## Capture spec
@@ -78,8 +79,9 @@ amixer -c $card sset 'ADC High Pass Filter' on
   [../reference/respeaker-2mic-hat.md](../reference/respeaker-2mic-hat.md#capture-front-end).
 
 ## FR-2a: Chunked recording
-- A session starts on button press. Its directory is named by start time:
-  `recordings/<YYYYMMDDTHHMMSS>/`.
+- A session starts on a button press or a web start (FR-23). Its directory is named by
+  the next allocated session ID: `recordings/rec-NNNNNN/` — no clock is consulted (see
+  [storage.md](storage.md#session-identity)).
 - Audio is written to sequentially numbered WAV chunks: `recording-001.wav`,
   `recording-002.wav`, …
 - A chunk rolls over when its elapsed time reaches
@@ -94,38 +96,56 @@ amixer -c $card sset 'ADC High Pass Filter' on
   total captured audio is shorter than it is discarded (LED double-flashes green,
   see [state-machine.md](state-machine.md#fr-2-start-recording)). A normal timer
   rollover is never subject to this check — a short final chunk of a longer session
-  is concatenated like any other.
+  is encoded into the session like any other.
 
 ### Disk threshold mid-session
-If the disk threshold is reached during recording, recording stops, the current
-chunk WAV is closed, and the normal end-of-session concatenation is attempted. If
-concatenation fails for lack of space, the chunk WAVs are retained for manual
+If the disk threshold is reached during recording, recording stops, the current chunk
+WAV is closed, and the normal end-of-session encode is attempted. The encode *frees*
+space overall — the m4a is ~1/8 the size of the chunks it replaces — but needs headroom
+while both exist. If it fails for lack of space, the chunk WAVs are retained for manual
 recovery or retry on next boot.
 
-## FR-3 / FR-6: End of session — concatenate to one WAV
+## FR-3 / FR-6: End of session — encode to one m4a
 On the button press that ends the session (LED → amber):
 
-1. **Concatenate** all `recording-*.wav` chunks into a single **`session.wav`**
-   (`concat_wav_files`; same-format PCM concat, no re-encode).
-2. **Retain `session.wav`** — it is the artifact used for transcription.
-3. **Delete the `recording-*.wav` chunks** once `session.wav` is written, leaving
-   one copy of the audio on disk (see
+1. **Concatenate and encode in a single `ffmpeg` pass** over the ordered chunk list
+   (concat demuxer → AAC), producing **`session.m4a`** — AAC-LC at
+   `recording.encode_bitrate_kbps` (default 32), 16 kHz mono. No intermediate
+   full-length WAV is written, so peak disk during finalization is the chunks plus the
+   growing m4a (~1.13× session size) rather than ~2×.
+2. **Retain `session.m4a`** — it is the artifact used for transcription, playback,
+   download, and diarization upload.
+3. **Delete the `recording-*.wav` chunks** once `session.m4a` is complete, leaving one
+   copy of the audio on disk (see
    [Audio storage format](../adr/0001-audio-storage-format.md)).
-4. Derive the session duration from `session.wav` (frame count ÷ sample rate) and
-   write `status.json` (`status = "encoded"`, device hostname, `recorded_at`,
-   `duration`).
-   > The status literal `"encoded"` is chosen for `earshot-tui` compatibility even
-   > though no encode occurs; it means "capture finalized to `session.wav`."
+4. Derive the session duration from `session.m4a` and write `status.json`
+   (`status = "encoded"`, device hostname, `recorded_at`, `duration`) — see
+   [storage.md](storage.md#time-is-metadata-not-identity).
+   > The status literal `"encoded"` was chosen for `earshot-tui` compatibility back when
+   > no encode occurred. It is now literally accurate.
 5. Queue the session for transcription if enabled (see
-   [transcription.md](transcription.md)); return to idle (green).
+   [processing.md](processing.md)); return to idle (green).
 
 ### FR-6a: Finalization failure
-- A concatenation failure is logged to the journal.
+- A concatenate/encode failure is logged to the journal.
 - The `recording-*.wav` chunks are **retained** (not deleted) for manual recovery
-  or next-boot retry.
+  or next-boot retry, and any partial `session.m4a` is removed so the session reads
+  cleanly as "not yet finalized".
 - No LED feedback for finalization failure (post-recording is not a user-visible
   state beyond the amber window).
 
 ## Size reference
-16 kHz mono PCM is ~1.9 MB/min, so a 43-minute session concatenates to a single
-`session.wav` of ~83 MB.
+| Stage | Rate | 43-min session |
+|---|---|---|
+| `recording-*.wav` chunks (transient) | 16 kHz mono PCM, ~1.9 MB/min | ~83 MB |
+| **`session.m4a`** (retained) | AAC-LC 32 kbps, ~0.24 MB/min | **~10 MB** |
+
+The chunks exist only for the duration of the session, so ~10 MB is what a finished
+session costs on disk — roughly 230 hours on a 59 GB card before the 90% threshold.
+
+> **32 kbps is the v1 value, to confirm during bring-up.** It is chosen on general
+> grounds for 16 kHz mono speech, not measured on this capture chain — and the encode is
+> one-way, so a value that is too low degrades every recording made before it is noticed.
+> Listen back to the first real sessions and compare against 64 kbps before accumulating
+> a library; [experiment 0001](../experiments/0001-storage-bitrate.md) sets out the
+> measurement. Raise via `recording.encode_bitrate_kbps` if speech is not clean.
