@@ -2,9 +2,16 @@
 
 Earshot reads a single `config.toml` in the **data directory** — `~/earshot-data/config.toml`
 by default, not the install directory. The installer creates it interactively. All keys
-have defaults; omitting a key uses the default. Apply changes with
-`sudo systemctl restart earshot`, except `[processing].service_url`, which applies
-immediately.
+have defaults; omitting a key uses the default.
+
+**Configuration is done by editing `config.toml` over SSH** and applying with
+`sudo systemctl restart earshot`. This is the intended workflow, not a limitation: whoever
+owns the device already reached it over SSH to install it, and configuration changes are
+rare. The web UI is for operating the device — recording, browsing, transcribing — not for
+editing its config. The one exception is `[processing].service_url`, which the UI can set
+because managing the service connection is an operational act with live status (see
+[configure a processing service](../requirements/web-ui/processing-service.md)); a change
+to it applies immediately without a restart.
 
 > **Authoritative schema.** The keys below define the config the application
 > parses. Earlier drafts used `[encoding]`/`[shutdown]`/`storage.recordings_dir`, and a
@@ -24,6 +31,8 @@ immediately.
 | `alsa_pcm` | string | `"plughw:CARD=seeed2micvoicec,DEV=0"` | ALSA capture PCM for `arecord`. Use `plughw:` for rate/format conversion. |
 
 ## `[recording]`
+A change takes effect on the **next** recording; it never disturbs one in progress.
+
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `chunk_duration_seconds` | int | `900` | Length of each WAV chunk (15 min). Recording continues seamlessly across chunks. |

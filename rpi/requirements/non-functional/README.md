@@ -13,6 +13,7 @@ Functional requirements (`FR-n`) live in the sibling documents of
 |---|---|
 | [No internet; graceful degradation](no-internet-graceful-degradation.md) | Nothing needs the internet, capture needs no network at all, and everything else degrades by tier |
 | [Clock independence](clock-independence.md) | Identity, ordering and labelling never depend on the clock being right — the Pi has no RTC |
+| [Core functionality over the API](core-functionality-over-api.md) | Every core operation is reachable over the HTTP API; configuring the device stays SSH |
 | [Resilience](resilience.md) | A crash or power loss never costs recorded audio |
 | [Startup time](startup-time.md) | Power-on to ready in 60 s on a Pi 4B |
 

@@ -28,6 +28,7 @@ the live one.
 | [Session identity](session-identity.md) | Identity is a database-allocated integer, never a timestamp, never reused |
 | [State storage](state-storage.md) | SQLite for state, files for artifacts |
 | [Job execution](job-execution.md) | An in-process worker over a table — no broker, no task-queue framework |
+| [The HTTP API is the interface](http-api-is-the-interface.md) | One API; the web UI is a client of it, and the on-disk layout is not a public contract |
 | [Optional processing service](optional-processing-service.md) | The device stands alone; a processing service is an upgrade, never a dependency |
 | [Hardware abstraction layer](hardware-abstraction-layer.md) | Button, LED and capture behind interfaces, with a stub for development |
 | [systemd for service management](systemd-for-service-management.md) | Runs as a systemd unit, started on boot by the installer |

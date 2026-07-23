@@ -160,7 +160,7 @@ is in use determines whether anything does.
 > recording — and transcription can fall back to running locally in the meantime.
 
 ## FR-16: Transcript format
-`transcript.md`, `earshot-tui`-compatible:
+`transcript.md`:
 ```markdown
 # <session name, or the session ID when unnamed>
 **Session:** rec-000042

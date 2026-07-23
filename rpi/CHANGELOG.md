@@ -8,6 +8,20 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ## [Unreleased]
 
 ### Changed
+- **The HTTP API is the device's operating interface** (`adr/http-api-is-the-interface.md`
+  — new; `requirements/non-functional/core-functionality-over-api.md` — new;
+  `specs/api.md` — new). The app exposes one API and the web UI is a client of it, with no
+  privileged path; every core operation (recording, browsing, playback, download, delete,
+  transcription, diarization, naming, status) is reachable over HTTP, and the on-disk
+  layout is an implementation detail rather than a public contract. **Configuring** the
+  device stays an SSH edit of `config.toml` — deliberately out of the API, since it is
+  administration done rarely, not a core operation. `specs/api.md` drafts the endpoints,
+  including the two capabilities that were previously uncaptured: transcript export
+  (`GET …/transcript`) and live state reflection (an SSE `/v1/events` stream).
+- **`earshot-tui` file coupling reduced.** Dropped the tui-specific justifications from the
+  FR-n convention note, the transcript-format label, `status.json`'s "export" role, and the
+  identity examples — consistent with the on-disk layout no longer being a public contract.
+  The `"encoded"` status literal keeps its tui note for now, pending a separate decision.
 - **State moves to SQLite; files hold only artifacts** (`adr/state-storage.md`, replacing
   the filesystem-as-state decision; `specs/storage.md`, `specs/processing.md`,
   `specs/configuration.md`). Session records, the speaker-name map, and the processing

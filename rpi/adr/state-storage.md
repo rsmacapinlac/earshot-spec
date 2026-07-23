@@ -51,8 +51,8 @@ the WAV chunk writer is not — the shared risk is the disk, and it is shared ei
 "Capture depends on nothing external" is about services, networks, and clocks; a local
 file is none of those.
 
-**The database is rebuildable.** `status.json` is written per session as the `earshot-tui`
-export and carries enough — name, speakers, timings, state — to reconstruct a row. A lost
+**The database is rebuildable.** `status.json` is written per session and carries enough —
+name, speakers, timings, state — to reconstruct a row. A lost
 database is recovered by scanning `recordings/` and reading those files. Nothing
 irreplaceable lives only in the database.
 

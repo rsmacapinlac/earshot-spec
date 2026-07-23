@@ -20,7 +20,7 @@ Everything the device owns lives under `storage.data_dir` (default `~/earshot-da
       session.m4a                the retained audio
       transcript.md              the transcript, once produced
       transcript_raw.json        raw segments from the last job
-      status.json                earshot-tui export, and the DB rebuild path
+      status.json                per-session metadata; the DB rebuild path
 ```
 
 **The data directory is deliberately separate from the install directory.** The installer

@@ -46,14 +46,24 @@ rather than by number.
 - **Sessions are identified by name, not by date.** Identity is the allocated session ID;
   the name is a label on top of it, and the capture date is a scanning convenience only.
 - **No API keys and no third parties.** There is no cloud path for anything.
+- **The UI is a client of the device's API, not a privileged path**
+  ([the HTTP API is the interface](../../adr/http-api-is-the-interface.md)). Every core
+  operation is reachable over the API
+  ([core functionality over the API](../non-functional/core-functionality-over-api.md)), so
+  anything the UI does, a script or companion app can too.
+- **The UI operates the device; it does not configure it.** Recording, browsing,
+  transcribing, naming, status — all here. Editing `config.toml` is an SSH operation
+  ([configuration.md](../../specs/configuration.md)); the one exception is the processing
+  service URL, which is an operational connection, not general config.
 
 ## Out of scope (v1)
 
 - Authentication or user accounts.
 - Speaker enrollment, and any cross-session speaker registry.
 - Summarization — a designed-for future action, not built.
-- Editing `config.toml` beyond the processing service URL; other settings remain an
-  SSH + `systemctl restart` operation.
+- Editing `config.toml`, beyond the processing service URL. Configuration is done over
+  SSH — the intended workflow, since the device was installed that way and settings change
+  rarely ([configuration.md](../../specs/configuration.md)).
 - Deploying or managing a processing service. The UI points at one if you have it;
   standing it up is a separate operation
   ([service deployment](../../../service/specs/deployment.md)).
@@ -64,8 +74,9 @@ rather than by number.
   preemption, transcript format, diarization.
 - [`specs/state-machine.md`](../../specs/state-machine.md) — web-initiated start/stop and
   the Processing state.
-- [`specs/configuration.md`](../../specs/configuration.md) — `[web]` and `[processing]`
-  settings.
+- [`specs/api.md`](../../specs/api.md) — the HTTP contract these capabilities are called
+  through.
+- [`specs/configuration.md`](../../specs/configuration.md) — the config schema.
 - [`specs/storage.md`](../../specs/storage.md) — the file layout, the state database, and
   how the two reconcile.
 - [`connectivity.md`](../connectivity.md) and

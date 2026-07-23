@@ -41,8 +41,8 @@ stable ID as identity, optional human label on top.
 
 - **Queue order is capture order.** IDs are monotonic, so processing oldest-first is a
   plain sort by ID — no clock consulted ([clock independence](../requirements/non-functional/clock-independence.md)).
-- **IDs are never reused.** A reference to `rec-000042` — a downloaded transcript, an
-  `earshot-tui` entry — always resolves to the same recording, even after it is deleted.
+- **IDs are never reused.** A reference to `rec-000042` — a downloaded transcript, a
+  bookmarked URL — always resolves to the same recording, even after it is deleted.
   `AUTOINCREMENT` guarantees this.
 - **Allocation cannot race.** The button and the web UI can both start a recording; the
   database serialises the insert, so identity does not depend on the state machine
@@ -50,8 +50,9 @@ stable ID as identity, optional human label on top.
 - **The capture time is recorded at insert**, as `created_at`, rather than held in memory
   until finalization — which also removes the crash case where an interrupted session lost
   its start time.
-- **`earshot-tui` compatibility** depends on it tolerating `rec-NNNNNN` directory names —
-  the same class of coupling as the `"encoded"` status literal.
+- **The directory name is a public identifier.** It appears in URLs and in a downloaded
+  transcript's `**Session:**` line, so anything referencing a recording depends on the
+  `rec-NNNNNN` form being stable.
 
 ## Alternatives
 
