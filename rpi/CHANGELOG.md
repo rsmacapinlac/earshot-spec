@@ -8,6 +8,11 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ## [Unreleased]
 
 ### Changed
+- **Processing is never auto-triggered.** Finalizing a recording does not enqueue a job;
+  a stopped recording becomes pending and waits for the user to initiate transcription or
+  diarization from the web UI. Resolves the open trigger question and fixes a stale
+  "queue the session for transcription" step in `specs/recording.md`
+  (`specs/processing.md`, `specs/recording.md`).
 - **The HTTP API is the device's operating interface** (`adr/http-api-is-the-interface.md`
   — new; `requirements/non-functional/core-functionality-over-api.md` — new;
   `specs/api.md` — new). The app exposes one API and the web UI is a client of it, with no

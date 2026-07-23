@@ -1,10 +1,6 @@
 # Recording
 
-Covers audio capture, chunk rollover, and end-of-session encoding into a single
-**`session.m4a`** (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in
-[storage.md](storage.md). Capture is lossless PCM; the retained artifact is
-compressed — see
-[Audio storage format](../adr/audio-storage-format.md).
+Covers audio capture, chunk rollover, and end-of-session encoding into a single **`session.m4a`** (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in [storage.md](storage.md). Capture is lossless PCM; the retained artifact is compressed — see [Audio storage format](../adr/audio-storage-format.md).
 
 ## Capture spec
 | Parameter | Value |
@@ -123,8 +119,9 @@ On the button press that ends the session (LED → amber):
    `duration`) — see [storage.md](storage.md#the-database-is-rebuildable).
    > The status literal `"encoded"` was chosen for `earshot-tui` compatibility back when
    > no encode occurred. It is now literally accurate.
-5. Queue the session for transcription if enabled (see
-   [processing.md](processing.md)); return to idle (green).
+5. Return to idle (green). The session is now **pending** — it is not transcribed
+   automatically; the user initiates that from the web UI
+   ([processing.md](processing.md#trigger)).
 
 ### FR-6a: Finalization failure
 - A concatenate/encode failure is logged to the journal.

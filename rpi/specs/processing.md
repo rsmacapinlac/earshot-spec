@@ -66,8 +66,10 @@ A session is **pending** when it has `session.m4a`, no `transcript.md`, and no u
 all at once and the worker drains them.
 
 ### Trigger
-- Jobs are enqueued from the web UI. Nothing is enqueued automatically at this stage —
-  whether finalizing a recording should enqueue one is an open question, not yet decided.
+- **Jobs are enqueued only from the web UI. Finalizing a recording never enqueues one.**
+  A stopped recording becomes a pending session and waits; the user decides if and when to
+  transcribe it. Processing is opt-in per session — the device does not spend 20–35 minutes
+  of local CPU (or a diarization) on a recording nobody asked to transcribe.
 - Diarize does not require a prior transcript — it produces one.
 - A `queued` job can be **cancelled** outright. A `running` one follows the
   [preemption](#preemption) rules.
