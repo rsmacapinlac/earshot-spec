@@ -7,7 +7,7 @@ device** — it is the compute the earshot recorders don't have.
 service, account, or internet. Running this service makes transcription far faster and
 adds speaker diarization, which is the one thing a recorder genuinely cannot do. Nothing
 breaks if you never deploy it — see
-[rpi ADR-0010](../rpi/adr/0010-optional-processing-service.md).
+[the recorder's optional-processing-service decision](../rpi/adr/optional-processing-service.md).
 
 ## Why it exists
 

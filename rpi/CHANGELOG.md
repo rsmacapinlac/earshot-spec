@@ -7,6 +7,48 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 ## [Unreleased]
 
+### Changed
+- **State moves to SQLite; files hold only artifacts** (`adr/state-storage.md`, replacing
+  the filesystem-as-state decision; `specs/storage.md`, `specs/processing.md`,
+  `specs/configuration.md`). Session records, the speaker-name map, and the processing
+  queue live in `earshot.db` (WAL mode, stdlib `sqlite3` — no daemon, no dependency).
+  Audio, transcripts, and a rebuildable `status.json` stay as files. The database is
+  reconstructable from those files, so losing it costs nothing permanent. Retires the
+  per-session state files (`session.json`, `.job.json`, `.processing_failures.json`,
+  `.failed_processing`, `.next_id`).
+- **Session identity is the database primary key** (`adr/session-identity.md`, amended).
+  Allocation is `INTEGER PRIMARY KEY AUTOINCREMENT`, so IDs are monotonic and never
+  reused. Supersedes the filesystem `max + 1` scan, which reused an ID after the newest
+  session was deleted.
+- **A real processing queue** (`specs/processing.md`): the `jobs` table — ordered,
+  durable, retryable, inspectable — replaces a queue inferred by scanning for files.
+  Route (local vs service) is chosen at dequeue; crash resilience is per-route.
+- **Job execution: in-process worker, no task-queue framework** (`adr/job-execution.md` —
+  new). One worker thread over the table; local inference runs in a subprocess so an OOM
+  kill costs the job, not the recording, and cancellation is a signal rather than a
+  cooperative check. Celery/RQ/Dramatiq/arq rejected for requiring a broker daemon.
+- **Data directory split from the install directory.** `storage.data_dir` defaults to
+  `~/earshot-data` and holds `config.toml`, `earshot.db`, and `recordings/`; `~/earshot`
+  is left as a pure git checkout whose update path is `git pull`. `ReadWritePaths` follows
+  the data directory (`specs/configuration.md`, `specs/install-service.md`).
+- **Clock independence promoted to a requirement**
+  (`requirements/non-functional/clock-independence.md` — new). Identity, ordering and
+  labelling must never depend on the clock; the session-identity ADR now satisfies it
+  rather than re-deriving it.
+
+### Docs structure
+- **`requirements/non-functional.md` → `requirements/non-functional/`** — a README index
+  plus one file per requirement (no internet, clock independence, resilience, startup),
+  referred to by name rather than `NFR-n`.
+- **`requirements/web-ui.md` → `requirements/web-ui/`** — a README plus one file per
+  capability. `FR-19`–`FR-30` retired as identifiers; the web UI capabilities are now
+  named rather than numbered.
+- **ADRs de-numbered** in the `rpi/` and `service/` tracks — files, headings, and
+  cross-references now use names (`adr/state-storage.md`, not `0006-…`), matching the
+  requirements folders. `esp32/` is unchanged.
+- **`requirements/backlog.md` removed** — its live items (real-time transcription,
+  summarization) survive as out-of-scope entries; B-T6 was delivered.
+
 ### Added
 - **Web UI requirement** (`requirements/web-ui.md`): a LAN-served web UI (FR-19–FR-29)
   to browse / listen / delete recordings, start/stop recording, name sessions, show device
@@ -16,7 +58,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   web UI.
 - **Experiment 0001** (`experiments/0001-storage-bitrate.md`): validates the stored
   AAC bitrate for `session.m4a` against a PCM control — transcription WER, listen-back,
-  and encode wall-clock (supports ADR-0001). Replaces an earlier 0001 that planned to
+  and encode wall-clock (supports the audio storage format decision). Replaces an earlier 0001 that planned to
   validate OpenAI diarization quality and cross-part stitching; that experiment never ran
   and its decision (TD-7) was closed by decision instead.
 - **Capture front-end spec** (`specs/recording.md`): the WM8960 is configured for
@@ -27,7 +69,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 ### Changed
 - **An optional processing service; the device still stands alone**
-  (`adr/0010-optional-processing-service.md` — new; `specs/processing.md` — renamed from
+  (`adr/optional-processing-service.md` — new; `specs/processing.md` — renamed from
   `transcription.md`; `specs/configuration.md`, `specs/state-machine.md`,
   `specs/storage.md`, `specs/install-service.md`, `requirements/web-ui.md`,
   `requirements/non-functional.md`, `requirements/connectivity.md`). Transcription runs
@@ -60,7 +102,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   a connection problem and does **not** burn per-session retries — transcription can fall
   back to local in the meantime (`specs/storage.md`, `specs/processing.md`).
 - **`[hardware]` section added to the config schema** — `hardware.hat` was referenced by
-  the installer, `hardware.md`, and ADR-0003 but missing from the authoritative schema
+  the installer, `hardware.md`, and the hardware-abstraction-layer ADR but missing from the authoritative schema
   (`specs/configuration.md`).
 - **TD-6 re-decided — speaker naming is post-hoc and per-session; enrollment is out of
   scope.** Diarization always returns generic `Speaker N`; the user then plays a sample
@@ -71,14 +113,14 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   `specs/storage.md`). **Consequence:** enrollment was the user-facing source of the
   reference clips that hold identity across a split request — which is what led to TD-7
   being closed by decision rather than by validation (below).
-- **Sessions are stored compressed — `session.m4a`, AAC-LC 32 kbps** (ADR-0001
+- **Sessions are stored compressed — `session.m4a`, AAC-LC 32 kbps** (`adr/audio-storage-format.md`
   re-decided; `specs/recording.md`, `specs/storage.md`, `specs/transcription.md`,
   `specs/configuration.md`, `specs/state-machine.md`). Capture is unchanged and still
   writes lossless PCM chunks for crash resilience; finalization now concatenates **and
   encodes** them in a single `ffmpeg` pass (concat demuxer → AAC), writing no
   intermediate full-length WAV. A 43-minute session drops from ~83 MB to ~10 MB, so a
   59 GB card holds ~230 hours instead of ~28. Bitrate is tunable via
-  `recording.encode_bitrate_kbps`; container and codec are fixed. ADR-0001 was re-decided
+  `recording.encode_bitrate_kbps`; container and codec are fixed. That ADR was re-decided
   in place rather than superseded — nothing had been built against the WAV format, and the
   file is named by topic, so every existing link still resolves.
 - **Diarization no longer transcodes, and the two-phase preemption rule collapses.**
@@ -117,7 +159,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   bring-up — the same treatment as `ALC Max Gain` — because the encode is one-way
   (`specs/recording.md`, `specs/configuration.md`).
 - **Session identity is now an allocated `rec-NNNNNN` ID, not a timestamp**
-  (`adr/0008-session-identity.md` — new; `specs/storage.md`, `specs/recording.md`,
+  (`adr/session-identity.md` — new; `specs/storage.md`, `specs/recording.md`,
   `specs/transcription.md`, `requirements/web-ui.md`). The Pi 4B has no RTC and NFR-1
   requires offline recording, so a cold boot without a network named sessions from a
   clock known to be wrong — mis-ordering the FIFO queue and propagating a wrong date into
@@ -207,7 +249,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   - **Python/OS mismatch.** The target OS is Debian 13 "trixie" (Python 3.13);
     the docs called for a "Python 3.11 venv" as if 3.11 shipped with it. Clarified
     that 3.11 is the *minimum* and the venv uses the newer OS default
-    (`adr/0002-python-venv-over-docker.md`, `specs/install-service.md`).
+    (`adr/python-venv-over-docker.md`, `specs/install-service.md`).
   - **`hardware.md` RAM table** contradicted itself (Model row "2 GB min" vs. RAM
     row "4 GB"). Collapsed to one row: 2 GB min, 4 GB recommended, 8 GB supported.
   - **Boot config** (`reference/respeaker-2mic-hat.md`) was missing `dtparam=spi=on`
@@ -256,7 +298,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 ### Audio format
 - Audio is stored as a single **`session.wav`** (chunks concatenated at session
   end); `session.wav` is the transcribed artifact. See the
-  [audio storage format ADR](adr/0001-audio-storage-format.md).
+  [audio storage format ADR](adr/audio-storage-format.md).
 
 ### Notes
 - Scope is **Pi 4B + ReSpeaker**.

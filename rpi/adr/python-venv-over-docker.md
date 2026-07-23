@@ -1,4 +1,4 @@
-# 0002 — Python venv over Docker
+# Python venv over Docker
 
 **Status:** Accepted
 
@@ -17,13 +17,13 @@ the target Raspberry Pi OS ships a newer interpreter (Python 3.13 on Debian 13
 - The seeed-voicecard kernel driver must be installed on the host OS regardless —
   Docker provides no benefit there.
 - Simpler systemd config — the service runs the venv Python binary directly (see
-  [systemd for service management](0004-systemd-for-service-management.md)).
+  [systemd for service management](systemd-for-service-management.md)).
 - For a single-purpose device, Docker's isolation benefits don't outweigh the
   added complexity.
 - Docker remains a good fit for a server-side component — and is exactly what the
   [processing service](../../service/README.md) uses. This decision is about the
   **recorder**, which needs direct GPIO/SPI/ALSA access on the Pi; it says nothing about
-  where inference runs ([ADR-0010](0010-optional-processing-service.md)).
+  where inference runs ([optional processing service](optional-processing-service.md)).
 
 > **Implementation note:** the venv lives at `<install_dir>/.venv` (default
 > `/home/<install_user>/earshot/.venv`); the service runs

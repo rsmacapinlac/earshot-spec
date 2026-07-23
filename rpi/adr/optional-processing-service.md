@@ -1,4 +1,4 @@
-# 0010 — Processing Service Is Optional, Never Required
+# Processing Service Is Optional, Never Required
 
 **Status:** Accepted (2026-07-21)
 
@@ -52,7 +52,7 @@ independence for a feature — the same trade this decision exists to refuse.
 - **Diarization is a capability, not a guarantee.** A user without a host does not get
   speaker labels. Stating that plainly is better than a cloud dependency that quietly
   makes it work.
-- **No API keys exist anywhere in the system.** FR-26 stays retired.
+- **No API keys exist anywhere in the system.** Key management is gone from the device.
 - **The service must tolerate being absent**, and the device must treat that as normal
   configuration rather than an error state.
 

@@ -1,25 +1,25 @@
 # Architecture Decision Records (Processing Service)
 
-Significant architectural and technical decisions for the earshot processing service,
-with the context and reasoning behind them.
+Significant architectural and technical decisions for the earshot processing service, with
+the context and reasoning behind them — and the alternatives that were rejected and why.
 
-ADRs are referenced from other docs by title as well as number, so the numbering can
-carry gaps (e.g. a retired ADR) without breaking references.
+Each record gets its own file, named for the decision, and they are referred to **by name,
+not by number**.
 
 ## Format
-- **Status** — Proposed, Accepted, Deprecated, or Superseded
+- **Status** — Accepted, Deprecated, or Superseded
 - **Context** — the problem that required a decision
 - **Decision** — what was decided
-- **Consequences** — trade-offs and implications
+- **Consequences** — trade-offs and implications, including the costs
 - **Alternatives** — what else was considered, and why it was not chosen
 
-## Index
+## Decisions
 
-| ADR | Title | Status |
-|---|---|---|
-| [0001](0001-separate-processing-service.md) | Processing as a separate containerised service | Accepted |
-| [0002](0002-async-job-api.md) | Asynchronous job API, returning segments | Accepted |
-| [0003](0003-open-source-diarization.md) | Open-source diarization (pyannote), not a cloud API | Accepted |
+| Decision | In short |
+|---|---|
+| [Separate processing service](separate-processing-service.md) | Heavy processing runs in a container off the device — and is optional |
+| [Asynchronous job API](async-job-api.md) | Submit, poll, fetch — returning segments, never rendered text |
+| [Open-source diarization](open-source-diarization.md) | pyannote in the container, not a cloud API |
 
 Product requirements live in [`../requirements/`](../requirements/README.md); precise
 implementation specs live in [`../specs/`](../specs/README.md).

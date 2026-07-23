@@ -35,7 +35,7 @@ Labels are `Speaker 1`, `Speaker 2`, … numbered by first appearance in the rec
 > the entire audio, so a given voice gets one label from beginning to end no matter how
 > long the recording is. This is the property a chunked cloud API cannot offer, and it is
 > the reason diarization moved here — see
-> [Open-source diarization](../adr/0003-open-source-diarization.md).
+> [Open-source diarization](../adr/open-source-diarization.md).
 
 `num_speakers`, when supplied, is passed as a hint. It is not a constraint: a recording
 that turns out to have more voices is not forced into the requested count.

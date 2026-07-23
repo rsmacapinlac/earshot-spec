@@ -1,11 +1,12 @@
 # 0001 — Storage bitrate for `session.m4a`
 
 **Status:** Proposed (not yet run) · **Type:** hardware validation (non-normative)
-**Related:** [`../adr/0001-audio-storage-format.md`](../adr/0001-audio-storage-format.md),
+**Related:** [`../adr/audio-storage-format.md`](../adr/audio-storage-format.md),
 [`../specs/recording.md`](../specs/recording.md#fr-3--fr-6-end-of-session--encode-to-one-m4a),
 [`../specs/configuration.md`](../specs/configuration.md)
 
-**Decision this supports:** **ADR-0001** — whether **32 kbps AAC-LC** is the right stored
+**Decision this supports:** [**audio storage format**](../adr/audio-storage-format.md) —
+whether **32 kbps AAC-LC** is the right stored
 bitrate for `session.m4a`, or whether `recording.encode_bitrate_kbps` should ship higher.
 
 **Decision rule:** Ship **32 kbps** if H1 and H2 pass. If either fails, ship **64 kbps**
@@ -50,7 +51,7 @@ If one of these proves false, the decision reopens.
 - **H2 (listen-back):** on the 32 kbps encode, speech is fully intelligible with no
   artifacts a listener flags as distracting, across near and far talkers.
 - **H3 (encode cost — informational):** a 43-minute session encodes in **≤ 60 s** on a
-  Pi 4B. This validates ADR-0001's "tens of seconds" claim, which sizes the amber
+  Pi 4B. This validates the ADR's "tens of seconds" claim, which sizes the amber
   finalization window and is currently an estimate.
 
 ## Equipment
@@ -126,5 +127,5 @@ and 24 are indistinguishable, the chosen point is conservative; if 24 is clearly
 ## Outcome
 
 _To be filled in after running:_ measured WER per arm, listen-back result, encode
-wall-clock, the bitrate shipped in `recording.encode_bitrate_kbps`, and whether ADR-0001's
+wall-clock, the bitrate shipped in `recording.encode_bitrate_kbps`, and whether the ADR's
 finalization-window estimate held.

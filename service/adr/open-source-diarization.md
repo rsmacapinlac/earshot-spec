@@ -1,6 +1,6 @@
-# 0003 — Open-Source Diarization (pyannote), Not a Cloud API
+# Open-Source Diarization (pyannote), Not a Cloud API
 
-**Status:** Accepted (2026-07-21) · Delivers the RPi track's backlog item **B-T6**
+**Status:** Accepted (2026-07-21)
 
 ## Context
 
@@ -8,7 +8,7 @@ Diarization previously ran against OpenAI's `gpt-4o-transcribe-diarize`. That wa
 quality judgement — it was a hardware one. Nothing of the required quality would run on a
 Pi 4B, so the work went to the only host available, which was somebody else's.
 
-The import cost, all recorded in the RPi track's TD-7:
+The import cost:
 
 - **25 minutes per request.** Longer recordings had to be split.
 - **Speaker labels uncorrelated across requests.** A split recording returned
@@ -19,7 +19,7 @@ The import cost, all recorded in the RPi track's TD-7:
 - The product's only dependency on the internet.
 
 Once processing moved to a service on a host chosen for the job
-([ADR-0001](0001-separate-processing-service.md)), the hardware constraint that forced
+([separate processing service](separate-processing-service.md)), the hardware constraint that forced
 all of this disappeared.
 
 ## Decision
@@ -38,8 +38,8 @@ No cloud provider is called. No API key exists in the system.
 - **TD-7 stops existing.** No 25-minute cap, no splitting, no cross-request stitching, no
   duplicate `Speaker N` entries for one person. A rule the device had to explain to users
   is simply gone.
-- **No key, no cost, no internet.** FR-26 (key management) is retired from the device, and
-  with it the last thing that made earshot depend on a third party.
+- **No key, no cost, no internet.** Key management is retired from the device, and with it
+  the last thing that made earshot depend on a third party.
 - **Cost: weights are large and gated.** pyannote's pretrained models need a HuggingFace
   token and terms acceptance, once, at setup. If they are absent the service still starts
   and serves transcription, reporting `diarize: false` with the reason (SNFR-4) — but a

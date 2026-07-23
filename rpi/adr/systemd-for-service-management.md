@@ -1,4 +1,4 @@
-# 0004 — systemd for Service Management
+# systemd for Service Management
 
 **Status:** Accepted
 

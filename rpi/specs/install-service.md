@@ -1,7 +1,7 @@
 # Install & Service
 
 Installer contract (FR-8, FR-10) and the systemd unit that runs Earshot on boot
-(see [systemd for service management](../adr/0004-systemd-for-service-management.md)).
+(see [systemd for service management](../adr/systemd-for-service-management.md)).
 
 ## FR-8: One-line install
 Full setup on a fresh Raspberry Pi OS Lite install, run as the normal login user
@@ -13,7 +13,11 @@ bash ~/earshot/installer/install.sh
 The installer must:
 - Determine the install identity from the non-root login user running the install
   (`$SUDO_USER` when invoked through `sudo`, otherwise `$USER`), then derive that
-  user's home directory, UID, and `<install_dir>` (default `~/earshot`).
+  user's home directory, UID, `<install_dir>` (default `~/earshot`) and `<data_dir>`
+  (default `~/earshot-data`).
+- Create `<data_dir>` and write `config.toml` into it. **The two must stay separate** —
+  `<install_dir>` is a git checkout updated with `git pull`, and no user data belongs
+  there.
 - Prompt for the HAT and write `hardware.hat = "respeaker"` to `config.toml`.
 - `apt update` and `apt upgrade`.
 - Install the ReSpeaker (seeed-voicecard) audio driver.
@@ -25,14 +29,14 @@ The installer must:
   (`--no-transcription` skips this; see [processing.md](processing.md#fr-18-installer)).
 - Optionally prompt for a **processing service URL** and write `processing.service_url`.
   Leaving it blank is the normal case: the device transcribes locally. It can be set later
-  from the web UI (FR-30).
+  from the [web UI](../requirements/web-ui/processing-service.md).
 
 - Create a Python venv (3.11+; uses the OS default interpreter) and install all
   Python dependencies.
 - Install and enable the systemd service so Earshot starts on boot.
 
 > A fresh install transcribes on its own — no service, no key, no internet
-> ([ADR-0010](../adr/0010-optional-processing-service.md)). A
+> ([optional processing service](../adr/optional-processing-service.md)). A
 > [processing service](../../service/README.md) is an optional upgrade that speeds
 > transcription up and adds diarization.
 
@@ -74,7 +78,7 @@ The `earshot.service` unit:
 | Field | Value |
 |---|---|
 | `Description` | Earshot — on-device conversation recorder and transcriber |
-| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no start-time network dependency, see [NFR-1](../requirements/non-functional.md#nfr-1-standalone-and-no-internet-dependency)) |
+| `After` / `Wants` | `sound.target network.target` / `sound.target` (`network.target` is ordering only — no start-time network dependency, see [no internet; graceful degradation](../requirements/non-functional/no-internet-graceful-degradation.md)) |
 | `Type` | `simple` |
 | `User` / `Group` | `<install_user>` / `audio` |
 | `WorkingDirectory` | `<install_dir>` (default `/home/<install_user>/earshot`) |
@@ -84,11 +88,11 @@ The `earshot.service` unit:
 | `TimeoutStartSec` | `90` |
 | `SupplementaryGroups` | `gpio spi i2c audio` |
 | `AmbientCapabilities` | `CAP_SYS_BOOT` |
-| Hardening | `NoNewPrivileges=true`, `PrivateTmp=true`, `ProtectSystem=full`, `ReadWritePaths=<install_dir>` |
+| Hardening | `NoNewPrivileges=true`, `PrivateTmp=true`, `ProtectSystem=full`, `ReadWritePaths=<data_dir>` — the data directory is what the service writes; the checkout is read-only at runtime |
 | Environment | `PYTHONUNBUFFERED=1`; set `XDG_RUNTIME_DIR=/run/user/<install_uid>` only if required by the selected GPIO/SPI/audio libraries |
 | `WantedBy` | `multi-user.target` |
 
-`<install_user>`, `<install_uid>`, and `<install_dir>` are installer-rendered values;
+`<install_user>`, `<install_uid>`, `<install_dir>` and `<data_dir>` are installer-rendered values;
 the unit must not hardcode a local development username or UID.
 
 Capability rationale:

@@ -1,4 +1,4 @@
-# 0001 — Processing as a Separate Containerised Service
+# Processing as a Separate Containerised Service
 
 **Status:** Accepted (2026-07-21)
 
@@ -25,7 +25,7 @@ Processing may run in a **separate service, deployed with Docker Compose**, expo
 HTTP API for transcription and diarization.
 
 The service is **optional**. Devices remain self-sufficient — the Pi transcribes locally
-by default ([rpi ADR-0010](../../rpi/adr/0010-optional-processing-service.md)) — and this
+by default ([rpi: optional processing service](../../rpi/adr/optional-processing-service.md)) — and this
 service is what they use *instead*, when one is available, plus the only route to
 diarization.
 
@@ -40,7 +40,7 @@ the same API.
 - **A device using the service does no inference**, so a service job never contends with
   capture and is never preempted by a recording. The device keeps its local path and its
   preemption rule for when no service is configured.
-- **Diarization can use open-source models** ([ADR-0003](0003-open-source-diarization.md)),
+- **Diarization can use open-source models** ([open source diarization](open-source-diarization.md)),
   because the host is chosen for the job. That removes the 25-minute cap, the split, the
   duplicate speaker labels, the API key, and the per-session cost in one move.
 - **earshot becomes fully local-first.** With processing on the LAN, no feature requires

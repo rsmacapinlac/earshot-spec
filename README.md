@@ -21,8 +21,8 @@ Two **devices** capture audio; one **service** turns it into transcripts.
 **The devices work on their own** — a Pi records and transcribes with no service, account,
 or internet. The service is an upgrade for anyone who has somewhere to run it: much faster
 transcription, and speaker diarization, which is the one thing a recorder genuinely cannot
-do. See [rpi ADR-0010](rpi/adr/0010-optional-processing-service.md) and
-[service ADR-0001](service/adr/0001-separate-processing-service.md).
+do. See [the recorder's decision](rpi/adr/optional-processing-service.md) and
+[the service's](service/adr/separate-processing-service.md).
 
 Each track is versioned as a whole; see its `CHANGELOG.md`
 ([esp32](esp32/CHANGELOG.md), [rpi](rpi/CHANGELOG.md), [service](service/CHANGELOG.md))

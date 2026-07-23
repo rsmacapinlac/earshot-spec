@@ -1,28 +1,37 @@
 # Architecture Decision Records (RPi)
 
-Significant architectural and technical decisions for the Raspberry Pi Earshot,
-with the context and reasoning behind them. Each record carries an *Implementation
-note* flagging intended implementation specifics that sit below the decision
-itself.
+Significant architectural and technical decisions for the Raspberry Pi Earshot, with the
+context and reasoning behind them — and, importantly, the alternatives that were rejected
+and why.
 
-ADRs are referenced from other docs by title, not number, so the numbering can
-carry gaps (e.g. a retired ADR) without breaking references.
+Each record gets its own file, named for the decision. They are referred to **by name, not
+by number**, so nothing has to be looked up in an index to be understood.
 
 ## Format
-- **Status** — Proposed, Accepted, Deprecated, or Superseded
+- **Status** — Accepted, Deprecated, or Superseded, with the date of any re-decision
 - **Context** — the problem that required a decision
 - **Decision** — what was decided
-- **Consequences** — trade-offs and implications
+- **Consequences** — trade-offs and implications, including the costs
+- **Alternatives** — what else was considered, and why it was not chosen
 
-## Index
+A decision that changes is **re-decided in place** rather than superseded by a new record,
+with a *History* section explaining what changed. Nothing has been built against these
+yet, so a superseding chain would only make a reader visit a void record before reaching
+the live one.
 
-| ADR | Title | Status |
-|---|---|---|
-| [0001](0001-audio-storage-format.md) | Audio stored as a single m4a file | Accepted |
-| [0002](0002-python-venv-over-docker.md) | Python venv over Docker | Accepted |
-| [0003](0003-hardware-abstraction-layer.md) | Hardware abstraction layer | Accepted |
-| [0004](0004-systemd-for-service-management.md) | systemd for service management | Accepted |
-| [0006](0006-filesystem-as-state.md) | Filesystem as state, no SQLite | Accepted |
-| [0007](0007-chunked-recording.md) | Chunked recording (15-minute default) | Accepted |
-| [0008](0008-session-identity.md) | Session identity: allocated ID, not timestamp | Accepted |
-| [0010](0010-optional-processing-service.md) | Processing service is optional, never required | Accepted |
+## Decisions
+
+| Decision | In short |
+|---|---|
+| [Audio storage format](audio-storage-format.md) | Sessions stored as a single `session.m4a`, AAC-LC 32 kbps |
+| [Chunked recording](chunked-recording.md) | Audio captured in 15-minute WAV chunks so a crash costs at most one |
+| [Session identity](session-identity.md) | Identity is a database-allocated integer, never a timestamp, never reused |
+| [State storage](state-storage.md) | SQLite for state, files for artifacts |
+| [Job execution](job-execution.md) | An in-process worker over a table — no broker, no task-queue framework |
+| [Optional processing service](optional-processing-service.md) | The device stands alone; a processing service is an upgrade, never a dependency |
+| [Hardware abstraction layer](hardware-abstraction-layer.md) | Button, LED and capture behind interfaces, with a stub for development |
+| [systemd for service management](systemd-for-service-management.md) | Runs as a systemd unit, started on boot by the installer |
+| [Python venv over Docker](python-venv-over-docker.md) | A venv on the device — direct GPIO, SPI and ALSA access without privileged containers |
+
+Product requirements live in [`../requirements/`](../requirements/README.md); precise
+implementation specs live in [`../specs/`](../specs/README.md).

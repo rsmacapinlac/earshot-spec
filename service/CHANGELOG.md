@@ -42,10 +42,10 @@ is recorded in the [root README](../README.md). Dates are ISO-8601 (YYYY-MM-DD).
 This service is **optional**. It replaces the OpenAI diarization path outright, and
 *offers an alternative to* on-device transcription without removing it — the Pi still
 transcribes locally by default
-([rpi ADR-0010](../rpi/adr/0010-optional-processing-service.md)). Diarization is the one
+([rpi: optional processing service](../rpi/adr/optional-processing-service.md)). Diarization is the one
 capability that exists only here, because it needs compute a recorder does not have.
 
-ADR-0003 delivers the RPi backlog item **B-T6** and closes that track's **TD-7** by
+The open-source-diarization ADR delivers the RPi backlog item **B-T6** and closes that track's **TD-7** by
 removing the constraint that produced it — the 25-minute per-request cap and speaker
 labels uncorrelated across requests are properties of the cloud provider, not of the
 problem.

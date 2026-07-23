@@ -1,7 +1,7 @@
 # State Machine
 
 The application is a single-threaded control loop driven by the ReSpeaker button and
-the web UI ([web-ui.md](../requirements/web-ui.md)); transcription is offloaded to a
+the web UI ([capabilities](../requirements/web-ui/README.md)); transcription is offloaded to a
 cancellable worker thread (see [Concurrency](#concurrency)). On the ReSpeaker HAT the
 LED is the **local** feedback channel; the web UI is the detailed one.
 
@@ -36,7 +36,7 @@ LED is the **local** feedback channel; the web UI is the detailed one.
   and the device waits for files to be removed (it does not accept recordings).
 - The app polls the button and serves the web UI.
 - Transcription and diarization are **initiated from the web UI**
-  ([web-ui.md](../requirements/web-ui.md)) — neither has a button gesture — and are
+  ([capabilities](../requirements/web-ui/README.md)) — neither has a button gesture — and are
   transcription runs locally by default, and diarization requires a configured processing
   service. While a job is in flight the device is in **Processing**; at most one runs at a
   time ([processing.md](processing.md#processing-jobs)).
@@ -44,7 +44,9 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 ## FR-2: Start recording
 - A button press while idle begins a session, provided the disk threshold is not
   reached (if it is, the press is ignored and the LED stays orange).
-- The web UI can start a recording as well (FR-23); button and web are equivalent and
+- The web UI can start a recording as well
+  ([recording control](../requirements/web-ui/recording-control.md)); button and web are
+  equivalent and
   act on the single active session.
 - **Local transcription yields to recording.** If one is running when a recording starts
   (button or web), it is cancelled immediately, the session returns to the **front** of the
@@ -59,7 +61,7 @@ LED is the **local** feedback channel; the web UI is the detailed one.
   and the LED **double-flashes green**.
 
 ## FR-3: Stop recording
-- A second button press — or a stop from the web UI (FR-23) — ends the session
+- A second button press — or a stop from the web UI — ends the session
   (subject to minimum duration).
 - The LED goes **amber** (finalizing) while the chunks are concatenated and encoded into
   a single `session.m4a`, then returns to solid **green**.
@@ -81,7 +83,7 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 | Thread | Role |
 |---|---|
 | Main | State loop: idle ↔ record ↔ finalize ↔ process ↔ shutdown |
-| `earshot-job-*` | Runs one session's job — locally via faster-whisper (cancellable), or by submitting to the processing service and polling it |
+| `earshot-job-*` | Drains the job queue — spawning a subprocess for local transcription, or submitting to the processing service and polling it ([job execution](../adr/job-execution.md)) |
 
 At most one job worker exists at a time ([processing.md](processing.md#processing-jobs)).
 A **service** job coexists freely with **Recording**; a **local** one is cancelled by it.

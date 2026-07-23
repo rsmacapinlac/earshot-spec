@@ -4,7 +4,7 @@ Covers audio capture, chunk rollover, and end-of-session encoding into a single
 **`session.m4a`** (FR-2a, FR-3, FR-6). Storage layout and crash recovery are in
 [storage.md](storage.md). Capture is lossless PCM; the retained artifact is
 compressed — see
-[Audio storage format](../adr/0001-audio-storage-format.md).
+[Audio storage format](../adr/audio-storage-format.md).
 
 ## Capture spec
 | Parameter | Value |
@@ -79,7 +79,7 @@ amixer -c $card sset 'ADC High Pass Filter' on
   [../reference/respeaker-2mic-hat.md](../reference/respeaker-2mic-hat.md#capture-front-end).
 
 ## FR-2a: Chunked recording
-- A session starts on a button press or a web start (FR-23). Its directory is named by
+- A session starts on a button press or a web start. Its directory is named by
   the next allocated session ID: `recordings/rec-NNNNNN/` — no clock is consulted (see
   [storage.md](storage.md#session-identity)).
 - Audio is written to sequentially numbered WAV chunks: `recording-001.wav`,
@@ -117,10 +117,10 @@ On the button press that ends the session (LED → amber):
    download, and diarization upload.
 3. **Delete the `recording-*.wav` chunks** once `session.m4a` is complete, leaving one
    copy of the audio on disk (see
-   [Audio storage format](../adr/0001-audio-storage-format.md)).
-4. Derive the session duration from `session.m4a` and write `status.json`
-   (`status = "encoded"`, device hostname, `recorded_at`, `duration`) — see
-   [storage.md](storage.md#time-is-metadata-not-identity).
+   [Audio storage format](../adr/audio-storage-format.md)).
+4. Derive the session duration from `session.m4a`, update the session record, and write
+   `status.json` (`status = "encoded"`, device hostname, name, speakers, `created_at`,
+   `duration`) — see [storage.md](storage.md#the-database-is-rebuildable).
    > The status literal `"encoded"` was chosen for `earshot-tui` compatibility back when
    > no encode occurred. It is now literally accurate.
 5. Queue the session for transcription if enabled (see

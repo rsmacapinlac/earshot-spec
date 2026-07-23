@@ -22,7 +22,7 @@ Rationale: [`../adr/`](../adr/README.md).
   non-functional ones. IDs are never reused; retired requirements leave gaps.
 - The service returns **segments, never rendered text**. Any Markdown, header, or
   timestamp formatting is the calling device's concern — see
-  [ADR-0002](../adr/0002-async-job-api.md).
+  [asynchronous job API](../adr/async-job-api.md).
 - The service is **stateless about devices**. It has no notion of a session, a recording
   ID, or a user; it takes audio and returns segments. That is what lets one deployment
   serve both device tracks.

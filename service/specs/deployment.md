@@ -58,7 +58,7 @@ All configuration is environment variables; there is no config file.
 
 A Raspberry Pi is **not** a supported host. That is the entire point of the split: this
 service exists because the recorder cannot do this work
-([ADR-0001](../adr/0001-separate-processing-service.md)).
+([separate processing service](../adr/separate-processing-service.md)).
 
 ## Network
 

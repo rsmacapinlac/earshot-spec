@@ -15,8 +15,8 @@ Rationale: [`../adr/`](../adr/README.md).
 | [configuration.md](configuration.md) | `config.toml` schema — every key, type, default |
 | [state-machine.md](state-machine.md) | States, LED colour/pattern table, button semantics (FR-1–FR-4) |
 | [recording.md](recording.md) | Capture spec, chunking, encoding into a single m4a (FR-2a, FR-3, FR-6) |
-| [storage.md](storage.md) | Session layout, filesystem-as-state, disk management, crash recovery (FR-7) |
-| [processing.md](processing.md) | Local and service transcription routes, queue, preemption, transcript format, diarization (FR-14–FR-18, FR-25) |
+| [storage.md](storage.md) | File layout, the state database, reconciliation, disk management, crash recovery (FR-7) |
+| [processing.md](processing.md) | Local and service transcription routes, queue, preemption, transcript format, diarization (FR-14–FR-18) |
 | [install-service.md](install-service.md) | Installer steps and the systemd unit contract (FR-8, FR-10) |
 
 ## Conventions
@@ -28,13 +28,13 @@ Retired/reserved IDs:
 - `FR-5` — removed speaker/audio-output behavior.
 - `FR-11` — retired.
 - `FR-12` / `FR-13` — reserved by earlier drafts and intentionally unused in v1.
-- `FR-26` — retired. The OpenAI API key no longer exists: diarization runs on open-source
-  models in the [processing service](../../service/README.md), and there is no cloud path.0.
+- `FR-19`–`FR-30` — retired as identifiers. Those were the web UI capabilities, now named
+  rather than numbered ([`../requirements/web-ui/`](../requirements/web-ui/README.md)).0.
 
-`FR-19`–`FR-30` (web UI, recording control, on-demand processing, diarization, post-hoc
-speaker naming, device status, session naming, service configuration) are defined in
-[`../requirements/web-ui.md`](../requirements/web-ui.md); a dedicated `web-ui.md` spec
-will follow.
+Web UI capabilities — recording control, on-demand processing, diarization, speaker and
+session naming, device status, service configuration — are defined in
+[`../requirements/web-ui/`](../requirements/web-ui/README.md) and referred to **by name
+rather than by number**. A dedicated `web-ui.md` spec for the HTTP surface will follow.
 
 Implementation notes:
 - *Implementation note* callouts flag intended implementation specifics (paths,

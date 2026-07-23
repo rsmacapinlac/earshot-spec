@@ -1,4 +1,4 @@
-# 0007 — Chunked Recording (15-Minute Default)
+# Chunked Recording (15-Minute Default)
 
 **Status:** Accepted
 
@@ -19,7 +19,7 @@ chunk and ends the session. Chunk duration is set via
 - No hard maximum session duration — recording continues until the button is
   pressed or the disk threshold is reached.
 
-> **Pipeline (see [Audio storage format](0001-audio-storage-format.md)):** `recording-NNN.wav`
+> **Pipeline (see [Audio storage format](audio-storage-format.md)):** `recording-NNN.wav`
 > chunks accumulate during recording for in-session crash resilience; at session
 > end they are concatenated and encoded into a single **`session.m4a`** and then
 > deleted. `session.m4a` is the retained artifact. See

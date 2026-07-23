@@ -12,7 +12,7 @@ The supported (and minimum) SBC is the **Raspberry Pi 4 Model B**.
 | OS | Raspberry Pi OS Lite 64-bit |
 
 > The **Pi 4B is the minimum**; smaller boards (Pi Zero 2W, Pi 3B/3B+) are **out of
-> scope**. Pi 5 is outside v1 validation scope; it may work, but it is unsupported.
+> scope**. Pi 5 is outside v1 validation scope; it may work, but it is untested.
 >
 > **Target OS:** Raspberry Pi OS (Debian 13 "trixie"), kernel 6.12.x.
 

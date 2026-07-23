@@ -26,7 +26,7 @@ This documentation set is **v1.0** (see [CHANGELOG.md](CHANGELOG.md) and
 
 | Area | Directory | What lives here |
 |---|---|---|
-| Product needs & scope | [`requirements/`](requirements/README.md) | Supported hardware, non-functional targets, connectivity, out-of-scope, open questions |
+| Product needs & scope | [`requirements/`](requirements/README.md) | Supported hardware, web UI capabilities, non-functional targets, connectivity, open questions |
 | Technical decisions | [`adr/`](adr/README.md) | Why the major approaches were chosen |
 | Exact behavior (normative) | [`specs/`](specs/README.md) | Config schema, state machine, recording/finalization, storage, transcription, install/service |
 | Hardware facts | [`reference/`](reference/respeaker-2mic-hat.md) | ReSpeaker 2-Mic HAT hardware facts and expected device configuration |

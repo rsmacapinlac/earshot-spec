@@ -1,7 +1,7 @@
 # HTTP API
 
 Normative contract for the processing service (SR-1 – SR-7). Asynchronous job model —
-see [Asynchronous job API](../adr/0002-async-job-api.md).
+see [Asynchronous job API](../adr/async-job-api.md).
 
 Base path: `/v1`. All responses are JSON except the audio upload, which is
 `multipart/form-data`. No authentication in v1 (trusted LAN).
@@ -76,7 +76,7 @@ is in flight must treat it as lost and resubmit.
   **consistent across the entire recording** however long it is (SR-3, SNFR-2).
 - The service returns **segments only**. It never returns Markdown or any rendered
   transcript — formatting belongs to the caller
-  ([ADR-0002](../adr/0002-async-job-api.md)).
+  ([asynchronous job API](../adr/async-job-api.md)).
 
 ## SR-6: `DELETE /v1/jobs/{id}`
 

@@ -2,7 +2,7 @@
 
 Transcription and diarization: what runs, where, and when. LED behavior:
 [state-machine.md](state-machine.md). Both are initiated from the web UI
-([web-ui.md](../requirements/web-ui.md), FR-24 / FR-25) — neither has a button gesture.
+([transcribe](../requirements/web-ui/transcribe.md), [diarize](../requirements/web-ui/diarize.md)) — neither has a button gesture.
 
 ## Two routes, one of them optional
 
@@ -14,7 +14,7 @@ Transcription and diarization: what runs, where, and when. LED behavior:
 **The device stands alone.** Out of the box, with no configuration, no network beyond the
 LAN it serves its UI on, and no account anywhere, a Pi records and transcribes. That is
 the product's baseline and nothing may weaken it
-([ADR-0010](../adr/0010-optional-processing-service.md)).
+([optional processing service](../adr/optional-processing-service.md)).
 
 **A service is an upgrade, never a dependency.** Setting `processing.service_url` routes
 transcription to a machine better suited to it — far faster — and unlocks diarization,
@@ -36,34 +36,60 @@ local transcription; nothing breaks and nothing is lost.
 - **An interrupted job leaves no trace**, except a service job, which is resumable — see
   [Crash resilience](#crash-resilience).
 
-## FR-14: Queue
-- A session is **pending** when its directory has `session.m4a` but no `transcript.md`
-  and no `.failed_processing` marker.
-- The queue is implicit — derived from the filesystem at runtime (no queue file).
-- Processed **FIFO**, lowest session ID first. Because IDs are allocated monotonically and
-  need no clock, queue order is true capture order unconditionally
-  ([storage.md](storage.md#session-identity)).
-- The queue persists across reboots; a session stays pending until `transcript.md` or
-  `.failed_processing` is written.
-- Pending sessions are listed in the web UI for the user to run; a "transcribe all" action
-  processes them one at a time, FIFO.
+## The queue
 
-### FR-14a: Trigger
-- Every job is initiated per session from the web UI. Nothing is submitted automatically.
+Jobs live in the `jobs` table ([storage.md](storage.md#state--earshotdb)) — an explicit,
+durable queue rather than a set inferred from which files happen to exist.
+
+| Column | Meaning |
+|---|---|
+| `session_id` | the session being processed |
+| `kind` | `transcribe` or `diarize` |
+| `route` | `local` or `service`, decided at dequeue, not at enqueue |
+| `state` | `queued` → `running` → `done` \| `failed` \| `cancelled` |
+| `remote_job_id` | the service's job id, once submitted |
+| `attempts`, `last_error` | retry accounting |
+| `enqueued_at`, `started_at`, `finished_at` | timings |
+
+- **One worker, one job at a time.** A single worker thread takes the oldest `queued` row,
+  marks it `running` in the same transaction, and drains until the queue is empty. There is
+  no broker and no task-queue framework — the table *is* the queue
+  ([job execution](../adr/job-execution.md)).
+- **Order is enqueue order**, by job id. Since session IDs are themselves monotonic and
+  clock-free, a bulk enqueue of pending sessions is in true capture order.
+- **The queue survives reboot.** A `queued` row is still queued after a restart.
+- **Route is decided when the job starts**, not when it is enqueued — so a job queued while
+  the service was unreachable still runs on the service if it has come back by then.
+
+A session is **pending** when it has `session.m4a`, no `transcript.md`, and no unresolved
+`failed` job. The web UI lists pending sessions; a "transcribe all" action enqueues them
+all at once and the worker drains them.
+
+### Trigger
+- Jobs are enqueued from the web UI. Nothing is enqueued automatically at this stage —
+  whether finalizing a recording should enqueue one is an open question, not yet decided.
 - Diarize does not require a prior transcript — it produces one.
+- A `queued` job can be **cancelled** outright. A `running` one follows the
+  [preemption](#preemption) rules.
 
 ## FR-15: Process — local
 
 The default path, used whenever no service is configured.
 
-- The model is loaded once per run:
+**Runs in a subprocess** ([job execution](../adr/job-execution.md)). The worker spawns a
+child which loads the model and transcribes; the parent records the result.
+
+- The child loads the model per job:
   `WhisperModel(model, device="cpu", download_root="~/.local/share/earshot/models", cpu_threads=threads)`.
-  A load failure aborts the run.
+  A load failure fails the job.
 - `session.m4a` is decoded and transcribed, reading lazily during segment iteration.
-- Runs in a **cancellable worker thread** — a new recording cancels it (see
-  [Preemption](#preemption)).
-- On success: write `transcript_raw.json` then `transcript.md`, delete any
-  `.processing_failures.json`, update `status.json` to `transcribed`.
+- **Cancellation is termination.** A new recording kills the child (see
+  [Preemption](#preemption)) — immediate and guaranteed, rather than depending on the
+  transcriber noticing a flag between segments.
+- **An OOM kill costs the job, not the recording.** The kernel takes the child; capture
+  continues and the job is marked failed.
+- On success: write `transcript_raw.json` then `transcript.md`, mark the job `done`, and
+  update the session row and `status.json`.
 
 Defaults are `transcription.model = "base.en"` and `transcription.threads = 2`, the latter
 leaving headroom on the 4-core CPU. Expect roughly **7–13 minutes per 15 minutes of
@@ -76,35 +102,40 @@ Used whenever `processing.service_url` is set. The only route for diarization.
 
 1. **Submit** `session.m4a` and the job kind to `POST {service_url}/v1/jobs`
    ([service API](../../service/specs/api.md#sr-1-post-v1jobs)).
-2. **Persist the returned `job_id`** to `.job.json` *before* anything else.
+2. **Record the returned `job_id`** on the job row *before* anything else.
 3. **Poll** `GET /v1/jobs/{id}` every `processing.poll_interval_seconds` (default 5),
    surfacing the reported stage and progress. Progress is absent for stages the service
    cannot honestly measure; the UI shows the stage name instead.
 4. On `done`, **fetch** the result and **render** the segments into `transcript.md`
    (FR-16), writing the raw response to `transcript_raw.json` — or
    `transcript_diarized_raw.json` for a diarize job.
-5. **Delete** `.job.json` and any `.processing_failures.json`, update `status.json`.
+5. Mark the job `done`, update the session row and `status.json`.
 
 The device renders the transcript either way. The service returns segments only and never
-rendered text ([service ADR-0002](../../service/adr/0002-async-job-api.md)), because the Pi
+rendered text ([the service's asynchronous job API](../../service/adr/async-job-api.md)),
+because the Pi
 is what knows the session's name, its speaker-name map, and the transcript format.
 
 ### Crash resilience
-`.job.json` holds `{ "job_id": …, "kind": …, "submitted_at": … }`. On startup, for any
-session directory containing one, the device **resumes polling that job** rather than
-resubmitting — the work is already done or under way on the service.
+On startup, any job left `running` is resolved before the worker starts:
 
-If the service returns **404** for a persisted job id — reaped after its TTL, or lost to a
-rebuild — delete `.job.json` and return the session to pending.
+- **A service job with a `remote_job_id`** is **resumed by polling** rather than
+  resubmitted — the work is already done or under way on the service, and resubmitting
+  would discard it. If the service returns **404** — reaped after its TTL, or lost to a
+  rebuild — the job is returned to `queued`.
+- **A service job with no `remote_job_id`** never reached the service. Return it to
+  `queued`.
+- **A local job** holds no remote state. Return it to `queued` and re-run.
 
-A *local* job has no such record: it holds no remote state, so an interrupted one simply
-leaves the session pending and is re-run.
+Because the job row carries the remote identifier, a reboot mid-job costs nothing on
+either route.
 
 ## Preemption
 
 **Local transcription yields to recording.** It pegs CPU on the same machine that is
-capturing, so a new recording (button or web) cancels it immediately; the session returns
-to the front of the queue and recording begins without delay.
+capturing, so a new recording (button or web) terminates the inference subprocess; the job
+returns to `queued` and recording begins without delay. Because cancellation is a signal
+rather than a cooperative check, "without delay" is a contract rather than an aspiration.
 
 **A service job does not.** The work is on another machine and the Pi is holding an HTTP
 connection, so a recording may start, run, and finish alongside it with neither degraded.
@@ -115,16 +146,16 @@ is in use determines whether anything does.
 ## Failure
 - A local failure, a submission failure, a `failed` job status, or an unreachable service
   is logged with the session id and attempt count. No transcript is written.
-- The persisted count in `.processing_failures.json` (at least `count`, `last_failed_at`,
-  `last_error`) survives restarts and reboots.
-- If `processing.max_failures = 0`, the session stays pending and may be retried
-  indefinitely. Otherwise, once the count reaches it, write `.failed_processing`, delete
-  `.processing_failures.json`, and skip the session on future queue scans until the marker
-  is removed — by the web UI's Retry action (FR-24) or manually.
+- `attempts` and `last_error` are recorded on the job row and survive restarts.
+- If `processing.max_failures = 0`, the job is re-queued indefinitely. Otherwise, once
+  `attempts` reaches it, the job is marked `failed` and stops being retried; the session is
+  no longer pending. The web UI's
+  [Retry action](../requirements/web-ui/transcribe.md) enqueues a fresh job.
 - `session.m4a` always remains in place. A failure never costs audio.
 
 > **An unreachable service is not a session failure.** If a configured service cannot be
-> reached, the device reports a *connection* problem (FR-30) and does **not** increment
+> reached, the device reports a *connection* problem ([service
+> configuration](../requirements/web-ui/processing-service.md)) and does **not** increment
 > any session's failure count. A LAN outage must not burn through retries on every pending
 > recording — and transcription can fall back to running locally in the meantime.
 
@@ -141,7 +172,8 @@ is in use determines whether anything does.
 [MM:SS] segment text
 [HH:MM:SS] segment text
 ```
-- **Header:** the user-assigned session name (FR-29) when one is set, otherwise the
+- **Header:** the user-assigned session name ([session naming](../requirements/web-ui/name-session.md)) when
+  one is set, otherwise the
   session ID. The transcript carries **no recording date** — a session is identified by
   its name or its ID, never by a wall-clock time it may not have had (see
   [Time independence](#time-independence)).
@@ -159,15 +191,16 @@ The format is identical whichever route produced it — a transcript does not re
 it was made.
 
 ### Time independence
-Identity, ordering, and labelling never depend on the clock. Sessions are identified by an
-allocated ID (`rec-NNNNNN`) that contains no date and is chosen without consulting the
-clock, so a session captured on a Pi that has never had a valid time is indistinguishable
-from any other — fully identifiable, nameable, orderable, and processable.
+Per [clock independence](../requirements/non-functional/clock-independence.md), nothing
+here reads a timestamp back. Sessions are identified by an allocated ID (`rec-NNNNNN`)
+containing no date and chosen without consulting the clock, so a session captured on a Pi
+that has never had a valid time is indistinguishable from any other — fully identifiable,
+nameable, orderable, and processable.
 
 > `**Processed:**` is the only clock-derived field in the transcript. It is descriptive
 > only — nothing reads it back — so a wrong clock degrades it without breaking anything.
-> The capture time lives in `status.json` as `recorded_at`, which is likewise descriptive
-> only ([storage.md](storage.md#time-is-metadata-not-identity)).
+> The capture time is the session's `created_at`, set when the recording started, and is
+> likewise descriptive only ([storage.md](storage.md#state--earshotdb)).
 
 ## FR-17: LED
 - **Amber**, very slow pulse (~1.5–2 s) while a job runs; distinct from warning orange.
@@ -176,7 +209,7 @@ from any other — fully identifiable, nameable, orderable, and processable.
   shows **Recording**; a service job running alongside is surfaced by the web UI.
 - Returns to solid **green** when the job completes (no transition animation).
 
-## Diarization (FR-25)
+## Diarization
 
 Diarization requires a processing service. There is no local path, and no cloud path: the
 models need compute a Pi 4B does not have, and reaching for a third-party API to work
@@ -189,16 +222,18 @@ A diarize job returns the same segments as a transcribe job, each additionally l
   clusters over the whole audio in one pass
   ([service processing](../../service/specs/processing.md#diarize)), so a voice keeps one
   label from beginning to end. There is no chunking for the device to compensate for.
-- **Names are assigned afterward, per session** (FR-27): the user plays a sample of each
+- **Names are assigned afterward, per session** ([naming speakers](../requirements/web-ui/name-speakers.md)):
+  the user plays a sample of each
   detected voice and names it, and the names are substituted into `transcript.md`. The map
-  persists in `session.json`.
+  persists in the `speakers` table.
 - Diarizing **overwrites** `transcript.md` and writes `transcript_diarized_raw.json`,
   whose presence marks the current transcript as diarized. There is only ever one
   `transcript.md` per session.
 - Re-running a transcribe on a diarized session removes `transcript_diarized_raw.json` and
   the speaker labels, reverting it — including a *local* re-transcribe, which is how a
   diarized session is reverted when the service is gone.
-- Offered only when the service reports `diarize: true` (FR-30). A service without
+- Offered only when the service reports `diarize: true`
+  ([service configuration](../requirements/web-ui/processing-service.md)). A service without
   diarization models still accelerates transcription.
 
 ## FR-18: Installer

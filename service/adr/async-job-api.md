@@ -1,4 +1,4 @@
-# 0002 — Asynchronous Job API, Returning Segments
+# Asynchronous Job API, Returning Segments
 
 **Status:** Accepted (2026-07-21)
 

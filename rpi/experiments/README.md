@@ -14,7 +14,7 @@ as the record.
 
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
-| [0001](0001-storage-bitrate.md) | Storage bitrate for `session.m4a` | ADR-0001 | Proposed |
+| [0001](0001-storage-bitrate.md) | Storage bitrate for `session.m4a` | [audio storage format](../adr/audio-storage-format.md) | Proposed |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise
