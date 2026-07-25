@@ -17,7 +17,7 @@ optionally offloading heavier processing to a
 | Track | Kind | What it is | Runs on | Docs version | Implementation |
 |---|---|---|---|---|---|
 | [`esp32/`](esp32/requirements/README.md) | device | Pocket e-paper **voice-note recorder** firmware | Waveshare ESP32-S3 1.54" e-Paper (ESP32-S3-PICO-1) | v1.7 | [rsmacapinlac/earshot-firmware](https://github.com/rsmacapinlac/earshot-firmware) |
-| [`rpi/`](rpi/README.md) | device | Desk **conversation recorder** with a LAN web UI | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.1 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
+| [`rpi/`](rpi/README.md) | device | Desk **conversation recorder** with a LAN web UI | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.2 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
 
 **The devices work on their own** — a Pi records and transcribes with no service, account,
 or internet. A **processing service** is an optional LAN upgrade for anyone who has somewhere

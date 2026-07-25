@@ -53,7 +53,7 @@ SQLite in **WAL mode**: one writer, concurrent readers, crash-safe commits.
 
 | Table | Holds |
 |---|---|
-| `sessions` | id, name, `created_at`, duration, derived state, whether the transcript is diarized |
+| `sessions` | id, name, `occurred_at`, `created_at`, duration, derived state, whether the transcript is diarized |
 | `speakers` | per session, the `Speaker N` → assigned-name map |
 | `jobs` | the processing queue and its history — see [processing.md](processing.md#the-queue) |
 
@@ -62,6 +62,12 @@ SQLite in **WAL mode**: one writer, concurrent readers, crash-safe commits.
 - **`created_at` is set at insert**, when the recording starts. It is descriptive metadata:
   nothing sorts, looks up, or recovers by it, and on a device with no RTC it may be wrong.
   Ordering uses the ID.
+- **`occurred_at` is nullable and user-set** — the date/time the user asserts the
+  conversation happened ([set a session date and time](../requirements/web-ui/set-session-datetime.md)).
+  It is distinct from `created_at`: a human-provided label, not a clock reading. It is
+  likewise descriptive only — nothing sorts, looks up, or recovers by it — and its value may
+  be a date (`YYYY-MM-DD`) or a date-time (`YYYY-MM-DDTHH:MM`); either component may be
+  absent. Null means unset.
 - **A speaker label with no row stays `Speaker N`.**
 
 ### The database is on the capture path
@@ -80,6 +86,7 @@ reconstruct a row:
 { "status": "encoded" | "transcribed" | "diarized",
   "device": "earshot-pi",
   "name": "Weekly sync — pricing",
+  "occurred_at": "2026-07-20T14:00",
   "speakers": { "Speaker 1": "Ritchie", "Speaker 2": "Sarah" },
   "created_at": "2026-07-17T12:28:13.601387",
   "duration": 2604.8065,

@@ -22,6 +22,7 @@ rather than by number.
 | [Name the speakers](name-speakers.md) | Put real names on `Speaker N`, per session, after the fact |
 | [Device status](device-status.md) | Live mirror of what the LED is showing |
 | [Name a session](name-session.md) | An optional human label on top of the session ID |
+| [Set a session date and time](set-session-datetime.md) | An optional user-asserted date/time, since the device clock can't be trusted |
 | [Configure a processing service](processing-service.md) | Optional URL, with live connection and capability status |
 
 ## Settled decisions

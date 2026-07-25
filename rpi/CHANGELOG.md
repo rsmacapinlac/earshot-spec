@@ -9,6 +9,21 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.2] — 2026-07-25
+
+### Added
+- **Optional per-session date/time** (`requirements/web-ui/set-session-datetime.md` — new;
+  `specs/api.md`, `specs/storage.md`, `specs/processing.md`,
+  `requirements/web-ui/list-sessions.md`,
+  `requirements/non-functional/clock-independence.md`). A user may optionally assert when a
+  conversation happened, stored as **`occurred_at`** — set, changed, or cleared via
+  `PATCH /v1/sessions/{id}` exactly like the name, with date and time each optional. It is
+  distinct from the clock-derived `created_at`: a trustworthy user-provided label that shows
+  in the session list and as a `**Date:**` line in the `transcript.md` header (rewritten in
+  place on change), yet stays **descriptive-only** — nothing sorts, looks up, or establishes
+  identity by it. Clock-independence is refined to permit a *user-set* date in the header
+  while still forbidding a *clock-derived* one.
+
 ## [1.1] — 2026-07-25
 
 ### Added

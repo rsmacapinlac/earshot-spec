@@ -22,12 +22,19 @@ The button makes this unavoidable rather than unlikely. A recording started from
 |---|---|---|
 | Session identity | Be derived from a timestamp | Be an allocated identifier that consults no clock |
 | Queue order | Sort by capture time | Sort by identity, which is monotonic |
-| Transcript header | Carry a recording date | Carry the session name, or the ID |
+| Transcript header | Carry a **clock-derived** recording date | Carry the session name, or the ID (plus an optional **user-set** date — below) |
 | Stored timestamps | Be read back for any decision | Be descriptive metadata only |
 
 The last row is the general rule: **the device may record what time it thinks it is, but
 nothing may act on it.** Nothing sorts, looks up, recovers, or establishes identity by
 time.
+
+**A user-set date is the allowed exception.** A person may optionally assert a session's
+date/time ([set a session date and time](../web-ui/set-session-datetime.md), stored as
+`occurred_at`). Because it is user-provided rather than read from the device clock, it is
+trustworthy, and it may appear in the session list and the transcript header — unlike the
+clock-derived capture time, which may not. It remains **descriptive only**: nothing sorts,
+looks up, recovers, or establishes identity by it, so it introduces no clock dependency.
 
 ## Where this is satisfied
 
@@ -40,6 +47,11 @@ time.
 
 ## Not in scope
 
-Making the clock **correct**. NTP, an RTC module, and user-set time are all out of scope —
-this requirement exists precisely so that none of them is needed. If an RTC were added
-later, nothing here would change; the displayed dates would simply be more trustworthy.
+Making the **device clock** correct. NTP, an RTC module, and setting the system time are all
+out of scope — this requirement exists precisely so that none of them is needed. If an RTC
+were added later, nothing here would change; the displayed dates would simply be more
+trustworthy.
+
+The optional per-session `occurred_at` above is **not** an exception to this: it is a
+human-entered label on one session, not a device time source, and it neither sets nor
+depends on the system clock.

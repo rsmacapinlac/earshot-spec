@@ -15,9 +15,15 @@ running on the operator's LAN.
 
 ## Adopted service
 
-`ahmetoner/whisper-asr-webservice` (WhisperX), verified 2026-07-25:
+`onerahmet/openai-whisper-asr-webservice` (WhisperX) — the Docker Hub image for the
+[`ahmetoner/whisper-asr-webservice`](https://github.com/ahmetoner/whisper-asr-webservice)
+project:
 
-- **Image / tag:** `ahmetoner/whisper-asr-webservice:v1.9.1`
+- **Image / tag:** `onerahmet/openai-whisper-asr-webservice:v1.9.1` — **pin a version; do
+  not run `:latest`.** A `:latest` build was observed (2026-07-25) to 500 on every request
+  from a WhisperX engine regression (`self.model` `None` in `load_model`), and an auto-updater
+  (e.g. `diun`/watchtower) pulling `:latest` can break a working host silently
+  ([experiment 0002](../experiments/0002-whisper-asr-webservice.md)).
 - **Engine:** `ASR_ENGINE=whisperx` (faster-whisper transcription + pyannote diarization)
 - **Interface:** a single **synchronous** `POST /asr`; also `POST /detect-language`.
   Swagger at `/docs`, schema at `/openapi.json`. No jobs, polling, cancel, or health
@@ -28,7 +34,7 @@ running on the operator's LAN.
 ```yaml
 services:
   earshot-processing:
-    image: ahmetoner/whisper-asr-webservice:v1.9.1
+    image: onerahmet/openai-whisper-asr-webservice:v1.9.1   # pin a version; :latest can regress
     restart: unless-stopped
     ports:
       - "9010:9000"                # host 9010 -> container 9000; the device is pointed at host:port

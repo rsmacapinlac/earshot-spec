@@ -171,6 +171,7 @@ is in use determines whether anything does.
 ```markdown
 # <session name, or the session ID when unnamed>
 **Session:** rec-000042
+**Date:** 2026-07-20 14:00
 **Duration:** Xh Xm Xs
 **Processed:** YYYY-MM-DD HH:MM:SS
 
@@ -181,18 +182,25 @@ is in use determines whether anything does.
 ```
 - **Header:** the user-assigned session name ([session naming](../requirements/web-ui/name-session.md)) when
   one is set, otherwise the
-  session ID. The transcript carries **no recording date** — a session is identified by
-  its name or its ID, never by a wall-clock time it may not have had (see
-  [Time independence](#time-independence)).
+  session ID. The transcript carries **no clock-derived recording date** — a session is
+  identified by its name or its ID, never by a wall-clock time the device may not have had
+  (see [Time independence](#time-independence)).
 - **Session:** the session directory name, always present, as an opaque identifier that
   traces the transcript back to its directory.
+- **Date:** the user-set session date/time
+  ([set a session date and time](../requirements/web-ui/set-session-datetime.md)), **only
+  when the user has provided one** — omitted entirely otherwise. This is a user assertion,
+  not the device clock, so it is trustworthy in a way the capture time is not. It shows a
+  date alone or a date with a time, matching what the user entered.
 - **Duration:** the `session.m4a` duration — derived from the audio, so it is correct
   regardless of the clock.
 - **Processed:** wall-clock time the job completed.
 - Timestamps use `[MM:SS]` under one hour, `[HH:MM:SS]` at/beyond one hour.
 - Segment text is engine output, unmodified.
-- **Renaming rewrites the header.** Assigning or changing a session name updates the `#`
-  line of an existing `transcript.md` in place; nothing else in the file changes.
+- **Renaming or re-dating rewrites the header.** Assigning or changing the session name
+  updates the `#` line, and setting, changing, or clearing the session date/time
+  adds/updates/removes the `**Date:**` line, both in place in an existing `transcript.md`;
+  nothing else in the file changes.
 
 The format is identical whichever route produced it — a transcript does not record where
 it was made.
@@ -204,10 +212,13 @@ containing no date and chosen without consulting the clock, so a session capture
 that has never had a valid time is indistinguishable from any other — fully identifiable,
 nameable, orderable, and processable.
 
-> `**Processed:**` is the only clock-derived field in the transcript. It is descriptive
+> `**Processed:**` is the only clock-**derived** field in the transcript. It is descriptive
 > only — nothing reads it back — so a wrong clock degrades it without breaking anything.
 > The capture time is the session's `created_at`, set when the recording started, and is
-> likewise descriptive only ([storage.md](storage.md#state--earshotdb)).
+> likewise descriptive only ([storage.md](storage.md#state--earshotdb)). The `**Date:**`
+> line, when present, is `occurred_at` — **user-provided**, not read from the clock — and is
+> also descriptive only: nothing sorts, looks up, or recovers by it, so it introduces no
+> clock dependency.
 
 ## FR-17: LED
 - **Amber**, very slow pulse (~1.5–2 s) while a job runs; distinct from warning orange.

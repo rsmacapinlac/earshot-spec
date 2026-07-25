@@ -7,9 +7,12 @@ List all sessions with derived status, identity, duration, and size.
 A session is identified by its **name** ([session naming](name-session.md)) when one is
 set, otherwise by its session ID. The ID is always available as the secondary identifier.
 
-The capture date is shown as a scanning convenience only — never as identity. Nothing in
-the interface requires the clock to have been right
-([session identity](../../adr/session-identity.md)).
+A date is shown as a scanning convenience only — never as identity. When the user has set a
+session date ([set a session date and time](set-session-datetime.md)) it is shown, being the
+trustworthy one; otherwise the clock-derived capture date may be shown for what it is worth.
+Either way nothing in the interface requires the clock to have been right
+([session identity](../../adr/session-identity.md),
+[clock independence](../non-functional/clock-independence.md)).
 
 ## Status
 

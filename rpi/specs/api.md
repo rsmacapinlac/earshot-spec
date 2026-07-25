@@ -74,6 +74,7 @@ All sessions, newest id first
 ```json
 { "sessions": [
   { "id": "rec-000042", "name": "Weekly sync — pricing",
+    "occurred_at": "2026-07-20T14:00",
     "state": "diarized", "created_at": "2026-07-17T14:28:01",
     "duration": 2583.4, "size": 10289152,
     "has_transcript": true, "diarized": true } ] }
@@ -83,18 +84,29 @@ All sessions, newest id first
   [storage.md](storage.md#state--earshotdb). The UI's display wording ("Audio only",
   "Transcribed with Speakers") is a client concern.
 - `name` is `null` when unset; clients fall back to `id`.
+- `occurred_at` is the optional user-set session date/time
+  ([set a session date and time](../requirements/web-ui/set-session-datetime.md)); `null`
+  when unset. It is a user assertion, distinct from the clock-derived `created_at`, and is
+  descriptive only.
 
 ### `GET /v1/sessions/{id}`
 One session, with its speaker map and current/last job when relevant. **404** if unknown.
 
 ### `PATCH /v1/sessions/{id}`
-Set or clear the name ([name a session](../requirements/web-ui/name-session.md)).
+Set or clear the **name** ([name a session](../requirements/web-ui/name-session.md)) and/or
+the **session date/time**
+([set a session date and time](../requirements/web-ui/set-session-datetime.md)). Either
+field may be present; omit a field to leave it unchanged.
 
 ```json
-{ "name": "Weekly sync — pricing" }   // or { "name": null } to clear
+{ "name": "Weekly sync — pricing" }        // set/clear name  ({ "name": null } to clear)
+{ "occurred_at": "2026-07-20T14:00" }      // set date+time
+{ "occurred_at": "2026-07-20" }            // date only (time optional)
+{ "occurred_at": null }                    // clear it
 ```
 
-Applies at any point in the session's life, including while recording. Rewrites the
+`occurred_at` is an ISO-8601 date or date-time; **400** if it is neither. Both fields apply
+at any point in the session's life, including while recording, and rewrite the
 `transcript.md` header if one exists. **200** with the updated session.
 
 ### `DELETE /v1/sessions/{id}`

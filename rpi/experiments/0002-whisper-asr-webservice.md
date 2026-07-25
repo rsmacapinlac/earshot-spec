@@ -138,6 +138,17 @@ deployment*, not established as a property of the software. The prior 2026-07-25
 (above) shows the same image *can* work, so this is a regression/misconfiguration on the
 host.
 
+**Root cause (from `docker logs`, 2026-07-25):** the deployed image is
+`onerahmet/openai-whisper-asr-webservice:**latest**` (container recreated 15:31, consistent
+with an auto-pull). Every request raises, in `mbain_whisperx_engine.py:26`,
+`self.model['whisperx'] = whisperx.load_model(...)` →
+`TypeError: 'NoneType' object does not support item assignment` — a **WhisperX-engine
+regression in this `:latest` build** (`self.model` is `None`), alongside dependency-drift
+warnings (pyannote 3.3.2 vs trained 0.0.1; torch 2.7.1+cpu vs 1.10). Container config is
+correct (`ASR_ENGINE=whisperx`, `ASR_MODEL=base`, `ASR_DEVICE=cpu`, `HF_TOKEN` set). **Fix:
+pin the image to a known-good tag (v1.9.1) instead of `:latest`** in
+`/data/services/whisper/compose.yml`, re-pull, and recreate — then re-run the tests below.
+
 **Next steps (host-side, on `10.1.0.36`):**
 1. `docker logs <container>` — read the traceback behind the 500 (this is the decisive datum
    and is not visible from the client).
