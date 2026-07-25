@@ -7,7 +7,37 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [1.1] — 2026-07-25
+
+### Added
+- **The processing service is now documented in this track** as an adopted off-the-shelf
+  dependency, replacing the retired bespoke `service/` track:
+  [off-the-shelf processing service](adr/off-the-shelf-processing-service.md) (ADR — adopt an
+  existing third-party service rather than build one),
+  [experiment 0002](experiments/0002-whisper-asr-webservice.md) (validates
+  `ahmetoner/whisper-asr-webservice` / WhisperX), and
+  [reference/processing-service.md](reference/processing-service.md) (deployment recipe).
+
 ### Changed
+- **Transcription/diarization routes to the adopted synchronous service**
+  (`specs/processing.md`, `specs/api.md`, `specs/configuration.md`,
+  `requirements/web-ui/transcribe.md`, `requirements/web-ui/processing-service.md`). The
+  contract is the service's own single blocking `POST /asr`, not a bespoke async job API. The
+  service worker submits one request and blocks for the result instead of submit/poll: the
+  `jobs.remote_job_id` column is dropped, an interrupted service job is **re-run** rather than
+  resumed by polling, and `poll_interval_seconds` is replaced by `request_timeout_seconds`. A
+  service job carries **no stage/progress** (synchronous and opaque); local transcription
+  still reports progress. **Speaker labels are normalized on the device** — raw WhisperX
+  `SPEAKER_NN` → `Speaker N` by first appearance. Service **capabilities** are discovered by
+  probing `/openapi.json` (there is no health endpoint). `POST /v1/sessions/{id}/jobs` gains
+  an optional `num_speakers` hint (mapped to `min_speakers`/`max_speakers`). The device's
+  browser-facing HTTP API is otherwise unchanged, so the web UI needs no structural change.
+- **Superseded-ADR convention adopted** (`../AGENTS.md`, `adr/README.md`): a wholesale-replaced
+  ADR moves to `adr/superseded/` with a pointer to its replacement. The three former
+  `service/` ADRs (`separate-processing-service`, `open-source-diarization`, `async-job-api`)
+  now live in [`adr/superseded/`](adr/superseded/README.md).
 - **Processing is never auto-triggered.** Finalizing a recording does not enqueue a job;
   a stopped recording becomes pending and waits for the user to initiate transcription or
   diarization from the web UI. Resolves the open trigger question and fixes a stale
@@ -62,9 +92,9 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 - **`requirements/web-ui.md` → `requirements/web-ui/`** — a README plus one file per
   capability. `FR-19`–`FR-30` retired as identifiers; the web UI capabilities are now
   named rather than numbered.
-- **ADRs de-numbered** in the `rpi/` and `service/` tracks — files, headings, and
-  cross-references now use names (`adr/state-storage.md`, not `0006-…`), matching the
-  requirements folders. `esp32/` is unchanged.
+- **ADRs de-numbered** in the `rpi/` track and the then-existing bespoke `service/` track —
+  files, headings, and cross-references now use names (`adr/state-storage.md`, not
+  `0006-…`), matching the requirements folders. `esp32/` is unchanged.
 - **`requirements/backlog.md` removed** — its live items (real-time transcription,
   summarization) survive as out-of-scope entries; B-T6 was delivered.
 
@@ -94,7 +124,7 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
   `requirements/non-functional.md`, `requirements/connectivity.md`). Transcription runs
   **locally by default** — a fresh Pi transcribes with no service, account, or internet.
   Setting `processing.service_url` routes it to an
-  [earshot processing service](../service/README.md) on the LAN instead, which is far
+  [earshot processing service](reference/processing-service.md) on the LAN instead, which is far
   faster and is the **only** way to enable diarization; clearing it falls back and nothing
   is lost. A required service was drafted and reversed: a recorder that obliges you to
   stand up and maintain a container is a different product from one you plug in.
@@ -113,9 +143,9 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 - **NFR-1 rewritten — standalone, and no internet dependency.** Recording, storage,
   playback, the web UI *and transcription* all work on the device alone; nothing anywhere
   requires the internet (`requirements/non-functional.md`, `requirements/connectivity.md`).
-- **The device persists service job state.** `.job.json` in the session directory holds
-  the service's `job_id`, so a reboot mid-job resumes polling instead of resubmitting work
-  already done remotely. A local job needs no such record.
+- **The v1.0 design persisted service job state.** `.job.json` in the session directory held
+  the service's `job_id`, so a reboot mid-job resumed polling instead of resubmitting work
+  already done remotely. A local job needed no such record.
   `.transcription_failures.json` / `.failed_transcription` are renamed
   `.processing_failures.json` / `.failed_processing`. An unreachable service is reported as
   a connection problem and does **not** burn per-session retries — transcription can fall

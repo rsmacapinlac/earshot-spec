@@ -18,7 +18,7 @@ Everything else degrades by what is available.
 |---|---|
 | **No network** | Record, stop and shut down from the button; LED status. Audio is captured, encoded, and waits safely. Nothing else is reachable. |
 | **LAN** | Everything except diarization — web UI, browse, play, download, delete, name sessions, device status, and **local transcription**. |
-| **LAN + [processing service](../../../service/README.md)** | Faster transcription, and diarization: the one capability the Pi cannot provide itself ([optional processing service](../../adr/optional-processing-service.md)). |
+| **LAN + [processing service](../../reference/processing-service.md)** | Faster transcription, and diarization: the one capability the Pi cannot provide itself ([optional processing service](../../adr/optional-processing-service.md)). |
 | **Internet** | Nothing. It is never required. |
 
 ## The limit worth stating

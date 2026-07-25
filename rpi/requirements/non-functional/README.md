@@ -22,4 +22,4 @@ Functional requirements (`FR-n`) live in the sibling documents of
 - Real-time / live transcription during recording.
 - Summarization of transcripts.
 - **Local diarization.** Speaker labelling needs compute a Pi 4B does not have; it
-  requires a [processing service](../../../service/README.md) or it is not offered.
+  requires a [processing service](../../reference/processing-service.md) or it is not offered.

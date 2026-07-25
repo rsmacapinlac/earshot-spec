@@ -9,7 +9,7 @@ Transcription and diarization: what runs, where, and when. LED behavior:
 | | Runs where | Available |
 |---|---|---|
 | **Transcription** | on the Pi (faster-whisper), or on a processing service if one is configured | **always** |
-| **Diarization** | only on a [processing service](../../service/README.md) | only when a service is configured and reports the capability |
+| **Diarization** | only on a [processing service](../reference/processing-service.md) | only when a service is configured and reports the capability |
 
 **The device stands alone.** Out of the box, with no configuration, no network beyond the
 LAN it serves its UI on, and no account anywhere, a Pi records and transcribes. That is
@@ -33,8 +33,9 @@ local transcription; nothing breaks and nothing is lost.
 - **Local transcription yields to recording; a service job does not.** This is the one
   place the two routes behave differently, and it follows from where the CPU is — see
   [Preemption](#preemption).
-- **An interrupted job leaves no trace**, except a service job, which is resumable — see
-  [Crash resilience](#crash-resilience).
+- **An interrupted job leaves no trace** and is simply re-run — the same on both routes.
+  The service is stateless, so there is nothing to resume; the audio is on the device, so
+  nothing is lost (see [Crash resilience](#crash-resilience)).
 
 ## The queue
 
@@ -47,7 +48,6 @@ durable queue rather than a set inferred from which files happen to exist.
 | `kind` | `transcribe` or `diarize` |
 | `route` | `local` or `service`, decided at dequeue, not at enqueue |
 | `state` | `queued` → `running` → `done` \| `failed` \| `cancelled` |
-| `remote_job_id` | the service's job id, once submitted |
 | `attempts`, `last_error` | retry accounting |
 | `enqueued_at`, `started_at`, `finished_at` | timings |
 
@@ -102,35 +102,40 @@ and the reason a service is worth having if you have somewhere to run one.
 
 Used whenever `processing.service_url` is set. The only route for diarization.
 
-1. **Submit** `session.m4a` and the job kind to `POST {service_url}/v1/jobs`
-   ([service API](../../service/specs/api.md#sr-1-post-v1jobs)).
-2. **Record the returned `job_id`** on the job row *before* anything else.
-3. **Poll** `GET /v1/jobs/{id}` every `processing.poll_interval_seconds` (default 5),
-   surfacing the reported stage and progress. Progress is absent for stages the service
-   cannot honestly measure; the UI shows the stage name instead.
-4. On `done`, **fetch** the result and **render** the segments into `transcript.md`
-   (FR-16), writing the raw response to `transcript_raw.json` — or
-   `transcript_diarized_raw.json` for a diarize job.
+The service is **synchronous**: one request carries the audio and blocks until the
+transcript returns ([off-the-shelf processing service](../adr/off-the-shelf-processing-service.md)).
+
+1. **Submit** `session.m4a` to `POST {service_url}/asr` as multipart `audio_file`, with
+   query params for the job — `output=json&encode=true&task=transcribe`, and for a diarize
+   job `diarize=true` (plus `min_speakers`/`max_speakers` when a
+   [speaker-count hint](#diarization) is set)
+   ([service API](../reference/processing-service.md#adopted-service)). The worker holds
+   the connection open for the full processing time.
+2. On **2xx**, parse `segments[]`, keeping `{start, end, text, speaker?}` and **discarding**
+   `words`, `word_segments`, and `language`.
+3. For a diarize result, **normalize speaker labels** — map WhisperX's raw `SPEAKER_NN`
+   (cluster id) to `Speaker N` by **first appearance** across the session (see
+   [Diarization](#diarization)).
+4. **Render** the segments into `transcript.md` (FR-16), writing the raw response to
+   `transcript_raw.json` — or `transcript_diarized_raw.json` for a diarize job.
 5. Mark the job `done`, update the session row and `status.json`.
 
-The device renders the transcript either way. The service returns segments only and never
-rendered text ([the service's asynchronous job API](../../service/adr/async-job-api.md)),
-because the Pi
-is what knows the session's name, its speaker-name map, and the transcript format.
+A non-2xx response, a timeout, or a dropped connection fails the attempt
+([Failure](#failure)); the service keeps no state, so there is nothing to reconcile.
+
+Because the request is synchronous and opaque, a **service job has no stage or progress** —
+the device surfaces it as an indeterminate *Processing* state, unlike local transcription,
+which reports real progress. The device renders the transcript either way; the service
+returns segments only and never rendered text
+([off-the-shelf processing service](../adr/off-the-shelf-processing-service.md)), because the Pi is
+what knows the session's name, its speaker-name map, and the transcript format.
 
 ### Crash resilience
-On startup, any job left `running` is resolved before the worker starts:
-
-- **A service job with a `remote_job_id`** is **resumed by polling** rather than
-  resubmitted — the work is already done or under way on the service, and resubmitting
-  would discard it. If the service returns **404** — reaped after its TTL, or lost to a
-  rebuild — the job is returned to `queued`.
-- **A service job with no `remote_job_id`** never reached the service. Return it to
-  `queued`.
-- **A local job** holds no remote state. Return it to `queued` and re-run.
-
-Because the job row carries the remote identifier, a reboot mid-job costs nothing on
-either route.
+On startup, any job left `running` is returned to `queued` and re-run — on **both** routes.
+A synchronous service job holds no resumable remote state (the service is stateless), so an
+interrupted one is simply submitted again. The audio always remains on the device, so a
+reboot mid-job costs processing time, never data — and an interrupted re-run does **not**
+count against `max_failures` ([Failure](#failure)).
 
 ## Preemption
 
@@ -222,8 +227,27 @@ A diarize job returns the same segments as a transcribe job, each additionally l
 
 - **Labels are consistent across the entire recording**, however long it is. The service
   clusters over the whole audio in one pass
-  ([service processing](../../service/specs/processing.md#diarize)), so a voice keeps one
-  label from beginning to end. There is no chunking for the device to compensate for.
+  ([service processing](../experiments/0002-whisper-asr-webservice.md)), so a voice
+  keeps one label from beginning to end. There is no chunking for the device to compensate
+  for.
+- **The device normalizes the labels.** WhisperX returns raw cluster labels — `SPEAKER_00`,
+  `SPEAKER_01`, … numbered by **cluster id, not first appearance**. The device maps them to
+  `Speaker 1`, `Speaker 2`, … by **first appearance** across the session (the first speaker
+  heard becomes `Speaker 1`), and it is these normalized labels that appear in
+  `transcript.md` and the `speakers` table. This mapping is the device's job because the
+  synchronous service returns segments only
+  ([off-the-shelf processing service](../adr/off-the-shelf-processing-service.md)).
+
+  ```
+  WhisperX segment (raw)                       ->  earshot Segment (normalized)
+  {start:0.03, end:9.98,  speaker:"SPEAKER_01"} ->  {start:0.03, end:9.98,  speaker:"Speaker 1"}  # seen first
+  {start:76.70,end:77.40, speaker:"SPEAKER_00"} ->  {start:76.70,end:77.40, speaker:"Speaker 2"}  # seen second
+  # a transcribe-only run omits "speaker" entirely — never a null
+  ```
+- **A speaker-count hint is optional.** When the user supplies a count, the device passes it
+  to the service as `min_speakers = max_speakers = N`
+  ([speaker-count hint](../reference/processing-service.md#adopted-service)); with no hint, the
+  service infers the count. It is a hint, not a guarantee.
 - **Names are assigned afterward, per session** ([naming speakers](../requirements/web-ui/name-speakers.md)):
   the user plays a sample of each
   detected voice and names it, and the names are substituted into `transcript.md`. The map

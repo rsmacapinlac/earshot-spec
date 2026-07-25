@@ -66,7 +66,7 @@ rather than by number.
   rarely ([configuration.md](../../specs/configuration.md)).
 - Deploying or managing a processing service. The UI points at one if you have it;
   standing it up is a separate operation
-  ([service deployment](../../../service/specs/deployment.md)).
+  ([service deployment](../../reference/processing-service.md)).
 
 ## Where the behavior is specified
 
@@ -81,8 +81,8 @@ rather than by number.
   how the two reconcile.
 - [`connectivity.md`](../connectivity.md) and
   [`non-functional/`](../non-functional/README.md) — LAN-only; no internet required.
-- [`../../../service/`](../../../service/README.md) — the optional processing service this
-  UI can drive.
+- [`reference/processing-service.md`](../../reference/processing-service.md) — the optional
+  processing service this UI can drive.
 
 ## Still to capture
 

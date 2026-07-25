@@ -37,7 +37,7 @@ The installer must:
 
 > A fresh install transcribes on its own — no service, no key, no internet
 > ([optional processing service](../adr/optional-processing-service.md)). A
-> [processing service](../../service/README.md) is an optional upgrade that speeds
+> [processing service](../reference/processing-service.md) is an optional upgrade that speeds
 > transcription up and adds diarization.
 
 **A reboot at the end is required** — the seeed-voicecard driver does not appear

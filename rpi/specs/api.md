@@ -40,15 +40,18 @@ The live device state — the same thing the LED reflects
 { "state": "idle",
   "led": { "rgb": [0,255,0], "pattern": "solid" },
   "recording": { "session_id": "rec-000043", "elapsed": 128 },
-  "processing": { "session_id": "rec-000042", "kind": "diarize",
-                  "route": "service", "stage": "diarizing", "progress": 0.42 },
+  "processing": { "session_id": "rec-000042", "kind": "transcribe",
+                  "route": "local", "stage": "transcribing", "progress": 0.42 },
   "disk": { "used_percent": 46, "blocked": false } }
 ```
 
 - `state` — one of `booting`, `idle`, `recording`, `finalizing`, `processing`, `disk_full`.
 - `recording` / `processing` are `null` when nothing is active. Both may be present at once
   (a service job runs while recording — [processing.md](processing.md#preemption)).
-- `progress` is omitted for stages that cannot be honestly measured; render `stage`.
+- `stage` / `progress` are present only for the **local** route, which the device runs and
+  can measure. A **service** job is synchronous and opaque — the device omits both and the
+  client renders an indeterminate *Processing* state
+  ([off-the-shelf processing service](../adr/off-the-shelf-processing-service.md)).
 
 ### `GET /v1/events`
 A **Server-Sent Events** stream (`text/event-stream`) so a client follows changes without
@@ -160,8 +163,13 @@ diarization are enqueued here; the queue is durable and drained one at a time.
 Enqueue a job for a session.
 
 ```json
-{ "kind": "transcribe" }   // or "diarize"
+{ "kind": "transcribe" }                      // or "diarize"
+{ "kind": "diarize", "num_speakers": 3 }      // optional hint, diarize only
 ```
+
+`num_speakers` is an optional hint for `diarize`, passed to the service as
+`min_speakers = max_speakers = N` ([processing.md](processing.md#diarization)); omit it to
+let the service infer the count.
 
 **202** with the job. **409** if `kind` is `diarize` and no processing service reports the
 capability ([diarize](../requirements/web-ui/diarize.md)), or if a job is already queued or
@@ -177,9 +185,12 @@ The queue — queued, running, and recently finished:
 ```json
 { "jobs": [
   { "id": 128, "session_id": "rec-000042", "kind": "diarize", "route": "service",
-    "state": "running", "stage": "diarizing", "progress": 0.42,
+    "state": "running", "stage": null, "progress": null,
     "attempts": 1, "enqueued_at": "…", "started_at": "…" } ] }
 ```
+
+`stage` and `progress` are `null` for a running **service** job (synchronous, opaque); a
+running **local** job may carry both.
 
 ### `GET /v1/jobs/{id}`
 One job. **404** if unknown.
@@ -187,25 +198,30 @@ One job. **404** if unknown.
 ### `DELETE /v1/jobs/{id}`
 Cancel. A `queued` job is dropped; a `running` local job is terminated
 ([job execution](../adr/job-execution.md)); a `running` service job is abandoned by the
-device (the service reaps its own). **204**.
+device — it stops waiting on the connection. The stateless service cannot be cancelled, so
+it finishes the in-flight `/asr` call and discards the result. **204**.
 
 ## Processing service
 
 The one operational connection the API exposes — pointing the device at a
-[processing service](../../service/README.md)
+[processing service](../reference/processing-service.md)
 ([configure a processing service](../requirements/web-ui/processing-service.md)). This is
 not general configuration: it changes where transcription runs and gates diarization, and
 applies live.
 
 ### `GET /v1/service`
 ```json
-{ "configured": true, "url": "http://homelab.local:9000",
+{ "configured": true, "url": "http://homelab.local:9010",
   "reachable": true, "capabilities": { "transcribe": true, "diarize": true } }
 ```
-`capabilities` come from the service's own health endpoint, not from the URL being set.
+`capabilities` are synthesized by the device from the service, not from the URL being set:
+`transcribe` follows from reachability, and `diarize` from probing the service's
+`/openapi.json` for the `diarize` parameter
+([service API](../reference/processing-service.md#verifying)) — there is
+no health endpoint.
 
 ### `PUT /v1/service`
-Set the URL: `{ "url": "http://homelab.local:9000" }`. Applies immediately, no restart.
+Set the URL: `{ "url": "http://homelab.local:9010" }`. Applies immediately, no restart.
 **200** with the refreshed status.
 
 ### `DELETE /v1/service`

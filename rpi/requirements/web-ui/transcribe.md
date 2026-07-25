@@ -9,11 +9,13 @@ there instead — much faster — but removing the service falls back rather tha
 ([optional processing service](../../adr/optional-processing-service.md)).
 
 - The UI shows **where** the work will run, since the two routes differ substantially in
-  speed: roughly 20–35 minutes for a long session locally, a fraction of that on a
-  service.
+  speed: roughly 20–35 minutes for a long session locally, versus a service whose speed is
+  host-dependent (much faster on a GPU; nearer real time on a modest CPU —
+  [throughput](../../reference/processing-service.md#throughput)).
 - **Progress is reported honestly.** Local transcription can report real progress from
-  completed segments. A service reports its own stage, and omits a percentage for stages
-  it cannot measure — in which case the UI shows the stage name rather than inventing a
+  completed segments. A **service job is synchronous and opaque** — the service reports
+  neither stage nor percentage ([off-the-shelf processing service](../../adr/off-the-shelf-processing-service.md)) —
+  so the UI shows an indeterminate **Processing** state for it rather than inventing a
   number.
 - **Retry** enqueues a fresh job for a session whose previous one exhausted its attempts.
 - A "transcribe all" action enqueues every pending session at once; the worker drains them

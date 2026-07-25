@@ -1,6 +1,13 @@
 # Open-Source Diarization (pyannote), Not a Cloud API
 
-**Status:** Accepted (2026-07-21)
+**Status:** Superseded (2026-07-25) by [Adopt an off-the-shelf processing service](../off-the-shelf-processing-service.md).
+
+> **Superseded.** This decision was made for a bespoke earshot-built service. earshot no
+> longer builds one — it adopts an off-the-shelf service, and "runs locally / no cloud
+> diarization / consistent across a whole recording" is now a **selection criterion** in
+> [Adopt an off-the-shelf processing service](../off-the-shelf-processing-service.md),
+> validated for the adopted WhisperX service in
+> [experiment 0002](../../experiments/0002-whisper-asr-webservice.md). Kept for history.
 
 ## Context
 
@@ -26,7 +33,7 @@ all of this disappeared.
 
 Diarization runs **in the service, on open-source models** — pyannote
 `speaker-diarization-3.1` producing speaker turns, assigned onto faster-whisper segments
-by overlap ([processing.md](../specs/processing.md#diarize)).
+by overlap ([processing.md](../../specs/processing.md#diarization)).
 
 No cloud provider is called. No API key exists in the system.
 
@@ -49,7 +56,7 @@ No cloud provider is called. No API key exists in the system.
   on mono, closely-spaced-mic audio is good enough remains untested — but it is testable
   on our own hardware, repeatedly, without paying per attempt.
 - **Diarization needs real compute.** This is what makes the host requirements in
-  [deployment.md](../specs/deployment.md#host-requirements) non-trivial, and it is why a
+  [deployment reference](../../reference/processing-service.md#host-requirements) non-trivial, and it is why a
   Pi is explicitly not a supported host.
 
 ## Alternatives

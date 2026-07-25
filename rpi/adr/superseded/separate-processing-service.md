@@ -1,6 +1,11 @@
 # Processing as a Separate Containerised Service
 
-**Status:** Accepted (2026-07-21)
+**Status:** Superseded (2026-07-25) by [Adopt an off-the-shelf processing service](../off-the-shelf-processing-service.md).
+
+> **Superseded.** The "processing runs off-device, in an optional container" decision stands
+> — it now lives in [optional processing service](../optional-processing-service.md). What
+> changed is that earshot no longer *specifies and builds* that service; it
+> [adopts an off-the-shelf one](../off-the-shelf-processing-service.md). Kept for history.
 
 ## Context
 
@@ -25,7 +30,7 @@ Processing may run in a **separate service, deployed with Docker Compose**, expo
 HTTP API for transcription and diarization.
 
 The service is **optional**. Devices remain self-sufficient — the Pi transcribes locally
-by default ([rpi: optional processing service](../../rpi/adr/optional-processing-service.md)) — and this
+by default ([optional processing service](../optional-processing-service.md)) — and this
 service is what they use *instead*, when one is available, plus the only route to
 diarization.
 

@@ -16,11 +16,14 @@ Three states, each meaning something different to the user:
 |---|---|
 | **Not set** | Transcription runs on this device. Diarization unavailable. |
 | **Unreachable** | A URL is configured but the service is not responding. Transcription falls back to running locally. |
-| **Connected** | Shows the capabilities the service actually reports. |
+| **Connected** | Shows the capabilities the service actually offers. |
 
-**Capabilities come from the service, not from the URL being set.** A deployment with
-transcription models but no diarization models must offer one action, not two that fail
-differently.
+**Capabilities come from the service, not from the URL being set.** The device discovers
+them from the service itself — reachability for transcription, and probing its
+`/openapi.json` for the `diarize` parameter
+([service API](../../reference/processing-service.md#verifying)). A
+deployment with transcription but no diarization models must offer one action, not two that
+fail differently.
 
 - Applies without a restart, unlike other settings.
 - Persists to `[processing].service_url`
@@ -30,4 +33,4 @@ differently.
   ([processing.md](../../specs/processing.md#failure)).
 
 Deploying the service itself is out of scope for this UI; see
-[service deployment](../../../service/specs/deployment.md).
+[service deployment](../../reference/processing-service.md).

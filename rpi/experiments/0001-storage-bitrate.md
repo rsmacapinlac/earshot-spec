@@ -38,7 +38,7 @@ If one of these proves false, the decision reopens.
   list. Not HE-AAC, which behaves differently at these rates.
 - **A3 — transcription engine:** faster-whisper `base.en`, the shipped default. Run every
   arm through the **same** engine and route — either all locally on the Pi or all on a
-  [processing service](../../service/README.md) — since the comparison is between bitrates,
+  [processing service](../reference/processing-service.md) — since the comparison is between bitrates,
   not between routes.
 - **A4 — the artifact is dual-purpose:** the same file is transcribed *and* listened to,
   so a bitrate must satisfy both. Machine accuracy alone is not sufficient evidence.

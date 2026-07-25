@@ -51,7 +51,7 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 - **Local transcription yields to recording.** If one is running when a recording starts
   (button or web), it is cancelled immediately, the session returns to the **front** of the
   queue, and recording begins without delay — it holds CPU on the capturing machine.
-- **A job on a [processing service](../../service/README.md) does not.** The work is on
+- **A job on a [processing service](../reference/processing-service.md) does not.** The work is on
   another machine, so it continues alongside the recording, neither degraded nor
   cancelled ([processing.md](processing.md#preemption)).
 - The LED goes to **red** (snap solid, then slow pulse) for the session duration.

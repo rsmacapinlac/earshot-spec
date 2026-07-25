@@ -10,28 +10,29 @@ audio and transcripts stay on hardware you own, and no feature requires the inte
 
 ## Tracks
 
-Two **devices** capture audio; one **service** turns it into transcripts.
+Two **device tracks**. Each captures audio and turns it into transcripts on its own,
+optionally offloading heavier processing to a
+[processing service](rpi/reference/processing-service.md) on your LAN.
 
 | Track | Kind | What it is | Runs on | Docs version | Implementation |
 |---|---|---|---|---|---|
 | [`esp32/`](esp32/requirements/README.md) | device | Pocket e-paper **voice-note recorder** firmware | Waveshare ESP32-S3 1.54" e-Paper (ESP32-S3-PICO-1) | v1.7 | [rsmacapinlac/earshot-firmware](https://github.com/rsmacapinlac/earshot-firmware) |
-| [`rpi/`](rpi/README.md) | device | Desk **conversation recorder** with a LAN web UI | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.0 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
-| [`service/`](service/README.md) | service *(optional)* | Faster **transcription**, and **diarization** over HTTP | any Docker host on your LAN | v0.1 (draft) | _not yet created_ |
+| [`rpi/`](rpi/README.md) | device | Desk **conversation recorder** with a LAN web UI | Raspberry Pi 4B + Seeed ReSpeaker 2-Mic HAT | v1.1 | [rsmacapinlac/earshot](https://github.com/rsmacapinlac/earshot) |
 
 **The devices work on their own** — a Pi records and transcribes with no service, account,
-or internet. The service is an upgrade for anyone who has somewhere to run it: much faster
-transcription, and speaker diarization, which is the one thing a recorder genuinely cannot
-do. See [the recorder's decision](rpi/adr/optional-processing-service.md) and
-[the service's](service/adr/separate-processing-service.md).
+or internet. A **processing service** is an optional LAN upgrade for anyone who has somewhere
+to run it: much faster transcription, and speaker diarization, the one thing a recorder
+genuinely cannot do. earshot **adopts an off-the-shelf** service rather than building one
+([the decision](rpi/adr/off-the-shelf-processing-service.md),
+[why it's optional](rpi/adr/optional-processing-service.md),
+[deployment](rpi/reference/processing-service.md)).
 
 Each track is versioned as a whole; see its `CHANGELOG.md`
-([esp32](esp32/CHANGELOG.md), [rpi](rpi/CHANGELOG.md), [service](service/CHANGELOG.md))
-for history.
+([esp32](esp32/CHANGELOG.md), [rpi](rpi/CHANGELOG.md)) for history.
 
 ## Documentation roles
 
-Every track carries the same subdirectories, each with a distinct purpose (the service
-track has no `reference/` or `experiments/` — it owns no hardware):
+Every track carries the same subdirectories, each with a distinct purpose:
 
 | Directory | Holds |
 |---|---|

@@ -1,6 +1,18 @@
 # Asynchronous Job API, Returning Segments
 
-**Status:** Accepted (2026-07-21)
+**Status:** Superseded (2026-07-25) by [Adopt an off-the-shelf processing service](../off-the-shelf-processing-service.md).
+
+> **Superseded.** The service that was actually deployed —
+> `ahmetoner/whisper-asr-webservice` with `ASR_ENGINE=whisperx` — exposes a single
+> **synchronous** `POST /asr` with no jobs, polling, cancel, or health endpoint. Two of
+> the three benefits this ADR cited (progress, cancel) are unavailable from an opaque
+> synchronous engine regardless of wrapping, and the third (resilience) is covered by the
+> device's own durable queue, so the async contract was dropped rather than reconstructed
+> behind an adapter. earshot instead adopts an off-the-shelf service and owns queuing on
+> the device — see
+> [Adopt an off-the-shelf processing service](../off-the-shelf-processing-service.md). The
+> one decision that carried forward unchanged is **results are segments, never rendered
+> text**.
 
 ## Context
 

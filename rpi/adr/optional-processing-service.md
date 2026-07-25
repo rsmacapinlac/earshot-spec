@@ -14,7 +14,7 @@ answer was OpenAI, which brought a 25-minute per-request cap, speaker labels unc
 across requests, an API key to protect, per-session cost, and the product's only internet
 dependency.
 
-A [processing service](../../service/README.md) on the LAN removes all of that. The
+A [processing service](../reference/processing-service.md) on the LAN removes all of that. The
 question was whether the device should then *depend* on it.
 
 It should not. **A desk recorder that requires you to stand up and maintain a container

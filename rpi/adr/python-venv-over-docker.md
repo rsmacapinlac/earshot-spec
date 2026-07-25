@@ -21,7 +21,7 @@ the target Raspberry Pi OS ships a newer interpreter (Python 3.13 on Debian 13
 - For a single-purpose device, Docker's isolation benefits don't outweigh the
   added complexity.
 - Docker remains a good fit for a server-side component — and is exactly what the
-  [processing service](../../service/README.md) uses. This decision is about the
+  [processing service](../reference/processing-service.md) uses. This decision is about the
   **recorder**, which needs direct GPIO/SPI/ALSA access on the Pi; it says nothing about
   where inference runs ([optional processing service](optional-processing-service.md)).
 

@@ -15,6 +15,7 @@ as the record.
 | # | Title | Decision it supports | Status |
 | - | ----- | -------------------- | ------ |
 | [0001](0001-storage-bitrate.md) | Storage bitrate for `session.m4a` | [audio storage format](../adr/audio-storage-format.md) | Proposed |
+| [0002](0002-whisper-asr-webservice.md) | WhisperX processing service (`whisper-asr-webservice`) | [off-the-shelf processing service](../adr/off-the-shelf-processing-service.md) | Running (blocked) |
 
 Statuses: **Proposed** (designed, not run) · **Running** · **Complete** (outcome
 recorded, decision made). Product requirements live in `../requirements/`; precise

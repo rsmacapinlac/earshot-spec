@@ -58,14 +58,14 @@ is configured. The device transcribes on its own with no service, key, or intern
 | `threads` | int | `2` | faster-whisper `cpu_threads`. Default 2 leaves headroom for recording on the 4-core CPU. |
 
 ## `[processing]`
-An **optional** [processing service](../../service/README.md) on the LAN. Setting a URL
+An **optional** [processing service](../reference/processing-service.md) on the LAN. Setting a URL
 routes transcription there instead of running it locally, and is the only way to enable
 diarization. Leaving it empty is a fully supported configuration.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `service_url` | string | `""` | Base URL, e.g. `"http://homelab.local:9000"`. Empty means transcription runs locally and **[diarization](../requirements/web-ui/diarize.md) is unavailable**. Settable from the [web UI](../requirements/web-ui/processing-service.md). |
-| `poll_interval_seconds` | int | `5` | How often an in-flight service job is polled. Unused when no service is set. |
+| `service_url` | string | `""` | Base URL, e.g. `"http://homelab.local:9010"`. Empty means transcription runs locally and **[diarization](../requirements/web-ui/diarize.md) is unavailable**. Settable from the [web UI](../requirements/web-ui/processing-service.md). |
+| `request_timeout_seconds` | int | `0` | Client timeout for a synchronous `/asr` request. `0` means no timeout — a long session may hold the connection for tens of minutes ([throughput](../reference/processing-service.md#throughput)). A timeout fails the attempt like any other error. |
 | `max_failures` | int | `3` | Attempts before a job is marked `failed` and stops being retried. `0` retries forever. An unreachable service does **not** count as an attempt. |
 
 ## `[web]`
@@ -103,7 +103,7 @@ threads = 2
 
 [processing]
 service_url = ""
-poll_interval_seconds = 5
+request_timeout_seconds = 0
 max_failures = 3
 
 [web]
