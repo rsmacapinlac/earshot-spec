@@ -205,8 +205,16 @@ capability ([diarize](../requirements/web-ui/diarize.md)), or if a job is alread
 running for the session.
 
 ### `POST /v1/jobs`
-Bulk enqueue. `{ "kind": "transcribe", "target": "pending" }` enqueues every pending
-session, oldest first ("transcribe all"). **202** with the created jobs.
+Bulk enqueue, oldest first. **202** with the created jobs; sessions with a job already
+queued or running are skipped.
+
+- `{ "kind": "transcribe", "target": "pending" }` — every **pending** session (has audio,
+  no transcript). This is *"transcribe all"* with the Diarize option **off**.
+- `{ "kind": "diarize", "target": "undiarized" }` — every **not-yet-diarized** session (has
+  audio, no diarized transcript), **independent of transcription state** — audio-only and
+  already-transcribed alike. This is *"transcribe all"* with the Diarize option **on**;
+  it overwrites plain transcripts with diarized ones. **409** if no processing service
+  reports the diarize capability.
 
 ### `GET /v1/jobs`
 The queue — queued, running, and recently finished:

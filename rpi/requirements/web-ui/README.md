@@ -18,8 +18,8 @@ rather than by number.
 | [Delete a session](delete-session.md) | Remove a session and free the disk, with confirmation |
 | [Recording control](recording-control.md) | Start and stop, shared with the hardware button |
 | [Upload an audio file](upload-audio.md) | Create a session from an existing file, not just live capture |
-| [Transcribe](transcribe.md) | On demand, locally or on a service — always available |
-| [Diarize](diarize.md) | Label who spoke — requires a processing service |
+| [Transcribe](transcribe.md) | On demand, locally or on a service — always available; optionally **diarized** when a service is connected |
+| [Diarize](diarize.md) | Speaker labels — an **option** on Transcribe, offered only with a service |
 | [Cancel a job](cancel-a-job.md) | Cancel a queued or running transcription/diarization job |
 | [Name the speakers](name-speakers.md) | Put real names on `Speaker N`, per session, after the fact |
 | [Device status](device-status.md) | Live mirror of what the LED is showing |
@@ -30,15 +30,16 @@ rather than by number.
 ## Settled decisions
 
 - **Parity for recording, extension for processing.** Record, stop, and *status* are the
-  same capability on two surfaces — button plus LED, and the web UI. Transcription and
-  diarization exist **only** on the web surface, and should not acquire button gestures.
-  As extensions they must never degrade recording, the base function.
+  same capability on two surfaces — button plus LED, and the web UI. Transcription
+  (optionally diarized) exists **only** on the web surface, and should not acquire button
+  gestures. As an extension it must never degrade recording, the base function.
 - **The device stands alone; a service is an upgrade.** Transcription always works —
   locally by default, or on a [processing service](processing-service.md) if one is
   configured. A fresh Pi with no configuration transcribes. Removing a service falls back;
   nothing is lost ([optional processing service](../../adr/optional-processing-service.md)).
-- **Diarization is the one capability that needs a service.** Without one the action is
-  simply not offered — presented as a capability this deployment lacks, not as a failure.
+- **Diarization is an option that needs a service.** It rides on transcribe as a checkbox;
+  without a service the checkbox is simply not offered — presented as a capability this
+  deployment lacks, not as a failure.
 - **The UI offers only what is actually available**, based on what a service reports
   rather than on a URL merely being set.
 - **One transcript per session; diarization replaces it.** Every session has a single

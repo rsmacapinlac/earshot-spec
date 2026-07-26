@@ -35,11 +35,11 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 - If the disk threshold is already reached at startup, the LED pulses **orange**
   and the device waits for files to be removed (it does not accept recordings).
 - The app polls the button and serves the web UI.
-- Transcription and diarization are **initiated from the web UI**
-  ([capabilities](../requirements/web-ui/README.md)) — neither has a button gesture — and are
-  transcription runs locally by default, and diarization requires a configured processing
-  service. While a job is in flight the device is in **Processing**; at most one runs at a
-  time ([processing.md](processing.md#processing-jobs)).
+- Transcription (optionally diarized) is **initiated from the web UI**
+  ([capabilities](../requirements/web-ui/README.md)) — it has no button gesture.
+  Transcription runs locally by default; diarization is an option that requires a configured
+  processing service. While a job is in flight the device is in **Processing**; at most one
+  runs at a time ([processing.md](processing.md#processing-jobs)).
 
 ## FR-2: Start recording
 - A button press while idle begins a session, provided the disk threshold is not

@@ -1,8 +1,11 @@
 # Processing
 
-Transcription and diarization: what runs, where, and when. LED behavior:
-[state-machine.md](state-machine.md). Both are initiated from the web UI
-([transcribe](../requirements/web-ui/transcribe.md), [diarize](../requirements/web-ui/diarize.md)) — neither has a button gesture.
+Transcription — optionally diarized — is the one processing action; what runs, where, and
+when. LED behavior: [state-machine.md](state-machine.md). It is initiated from the web UI
+([transcribe](../requirements/web-ui/transcribe.md)); [diarize](../requirements/web-ui/diarize.md)
+is an option on it, not a separate action, and neither has a button gesture. Internally the
+queue still tracks two job **kinds** (`transcribe`, `diarize`) — the option just selects the
+kind.
 
 ## Two routes, one of them optional
 
@@ -64,6 +67,13 @@ durable queue rather than a set inferred from which files happen to exist.
 A session is **pending** when it has `session.m4a`, no `transcript.md`, and no unresolved
 `failed` job. The web UI lists pending sessions; a "transcribe all" action enqueues them
 all at once and the worker drains them.
+
+A session is **undiarized** when it has `session.m4a` and no diarized transcript
+(`transcript_diarized_raw.json` absent), **regardless of whether a plain `transcript.md`
+exists** — because diarization is independent of transcription. "Transcribe all" with the
+Diarize option checked targets every undiarized session (skipping any already queued or
+running), overwriting plain transcripts with diarized ones. It is offered only when a
+service reports the diarize capability.
 
 ### Trigger
 - **Jobs are enqueued only from the web UI. Finalizing a recording never enqueues one.**

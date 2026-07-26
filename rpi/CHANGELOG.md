@@ -9,6 +9,21 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.3.2] — 2026-07-26
+
+### Changed
+- **Transcription is the one processing action; diarization is an option on it, not a
+  separate action** (`requirements/web-ui/{transcribe,diarize,README}.md`, `specs/api.md`,
+  `specs/processing.md`, `specs/state-machine.md`). The UI presents a single **Transcribe**
+  action; when a service is connected and reports the capability, a **Diarize** checkbox
+  (plus its optional speaker-count hint) opens up — you never have to diarize. "Transcribe
+  all" gains the same checkbox: with Diarize off it targets **pending** sessions, with it on
+  it targets every **undiarized** session (audio-only and already-transcribed alike, since
+  diarization is independent of transcription), replacing plain transcripts with diarized
+  ones. The API keeps the two job **kinds** (`transcribe`/`diarize`) internally — the
+  checkbox just selects the kind — so this is a UI/requirements reframe, not a job-model
+  change. Adds the **undiarized** target for bulk diarize.
+
 ## [1.3.1] — 2026-07-26
 
 ### Fixed
