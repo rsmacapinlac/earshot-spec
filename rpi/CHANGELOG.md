@@ -9,6 +9,22 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.3] — 2026-07-26
+
+### Added
+- **Upload an audio file to create a session** (`requirements/web-ui/upload-audio.md` — new;
+  `specs/api.md`, `specs/storage.md`, `specs/state-machine.md`, `specs/configuration.md`,
+  `requirements/web-ui/README.md`). A new `POST /v1/sessions` (multipart `audio`, optional
+  `name`/`occurred_at`) creates a session from an existing file — the second creation path
+  alongside recording. The upload is **transcoded to the canonical `session.m4a`** on ingest
+  (the same encode a recording ends with), so once created an uploaded session is
+  indistinguishable from a recorded one everywhere downstream. The device **accepts and
+  encodes immediately** (surfacing the existing **Finalizing** state), returns **201**, and
+  the session lands **pending** — processing is never auto-triggered. **Disabled while
+  recording** (`409`) since the encode holds Pi CPU; disk-full blocks it; unreadable audio is
+  **400**; over `storage.max_upload_mb` (new, default 500) is **413**. Uploads are exempt
+  from the recording minimum-duration discard.
+
 ## [1.2] — 2026-07-25
 
 ### Added

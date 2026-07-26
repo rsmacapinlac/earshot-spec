@@ -45,6 +45,7 @@ A change takes effect on the **next** recording; it never disturbs one in progre
 |---|---|---|---|
 | `data_dir` | string | `"~/earshot-data"` | Everything the device owns — `config.toml`, `earshot.db`, and `recordings/`. **Deliberately separate from the install directory** (`~/earshot`), which is a git checkout whose update path is `git pull`. |
 | `disk_threshold_percent` | int | `90` | Disk usage at which new recordings are blocked. |
+| `max_upload_mb` | int | `500` | Maximum size of an [uploaded](../requirements/web-ui/upload-audio.md) audio file (`POST /v1/sessions`). A larger upload is rejected with **413**. |
 
 ## `[transcription]`
 The **local** transcription engine — the default path, used whenever no processing service

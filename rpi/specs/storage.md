@@ -47,6 +47,22 @@ of `rec-` plus six zero-padded digits ([session identity](../adr/session-identit
 - Padding is presentation. The database holds `42`; nothing parses the directory name back
   into an integer for identity purposes.
 
+### Session creation
+
+A session is born one of two ways, both allocating an ID identically (above) and producing
+the same `session.m4a`:
+
+- **Recording** — capture to chunks, then a concatenate-and-encode pass at stop
+  ([recording.md](recording.md#fr-3--fr-6-end-of-session--encode-to-one-m4a)).
+- **Upload** — an audio file is decoded and encoded to `session.m4a` in a single ffmpeg pass
+  on ingest ([upload an audio file](../requirements/web-ui/upload-audio.md),
+  [`POST /v1/sessions`](api.md#post-v1sessions)). No chunks are involved.
+
+Once `session.m4a` exists the two are identical on disk, so everything below —
+reconciliation, crash recovery, transcription, playback — treats them the same. An uploaded
+session's `created_at` is merely the upload time (clock-derived, descriptive only); its real
+date, if wanted, is the user-set `occurred_at`.
+
 ## State — `earshot.db`
 
 SQLite in **WAL mode**: one writer, concurrent readers, crash-safe commits.

@@ -1,21 +1,12 @@
 # Set a session date and time
 
-Give a session an optional date and time — when the conversation actually happened — and
-change or clear it at any point, exactly like [naming a session](name-session.md).
+Give a session an optional date and time and change or clear it at any point, exactly like [naming a session](name-session.md).
 
-**A date is a label, not an identity, and not the device clock.** Identity is the allocated
-session ID `rec-NNNNNN`, which never changes ([session identity](../../adr/session-identity.md)).
-This field, `occurred_at`, is a value the **user asserts** — not read from the Pi, which has
-no reliable clock ([clock independence](../non-functional/clock-independence.md)). It is
-distinct from the session's `created_at`, the clock-derived capture stamp that may be wrong
-and that nothing acts on.
+**A date is a label, not an identity, and not the device clock.** Identity is the allocated session ID `rec-NNNNNN`, which never changes ([session identity](../../adr/session-identity.md)). This field, `occurred_at`, is a value the **user asserts** — not read from the Pi, which has no reliable clock ([clock independence](../non-functional/clock-independence.md)). It is distinct from the session's `created_at`, the clock-derived capture stamp that may be wrong and that nothing acts on.
 
 ## Why this exists
 
-The Pi 4B has no real-time clock, so the automatic capture time can't be trusted and is
-never shown as fact. Letting the user optionally supply the real date and time is the
-trustworthy counterpart: the one date on a session that *is* reliable is the one a human
-put there on purpose.
+The Pi 4B has no real-time clock, so the automatic capture time can't be trusted and is never shown as fact. Letting the user optionally supply the real date and time is the trustworthy counterpart: the one date on a session that *is* reliable is the one a human put there on purpose.
 
 ## Behaviour
 

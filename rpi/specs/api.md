@@ -67,6 +67,23 @@ This is what lets every open UI reflect the same state.
 
 ## Sessions
 
+### `POST /v1/sessions`
+Create a session from an **uploaded** audio file
+([upload an audio file](../requirements/web-ui/upload-audio.md)) — the second way a session
+is born, alongside [recording](#post-v1recording).
+
+`multipart/form-data`:
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `audio` | file | yes | Any format ffmpeg decodes. Transcoded to the canonical `session.m4a` on ingest. |
+| `name` | string | no | Optional label; omitted means unnamed (falls back to the ID). |
+| `occurred_at` | string | no | Optional user-set date or date-time ([set a session date and time](../requirements/web-ui/set-session-datetime.md)). |
+
+The device **accepts and encodes immediately**, returning **201** with the finished session once `session.m4a` exists. The session lands **pending**; processing is never auto-triggered.
+
+Errors: **409** if a recording is active (upload is disabled while recording) or the disk threshold blocks new audio; **400** if the upload is unreadable or unsupported; **413** if it exceeds `storage.max_upload_mb`.
+
 ### `GET /v1/sessions`
 All sessions, newest id first
 ([list sessions](../requirements/web-ui/list-sessions.md)).

@@ -70,6 +70,13 @@ LED is the **local** feedback channel; the web UI is the detailed one.
 - Button presses and web start/stop actions are ignored during post-recording
   processing — new recordings are blocked until the device is idle again.
 
+## Creating a session by upload
+The web UI can also create a session from an uploaded audio file
+([upload an audio file](../requirements/web-ui/upload-audio.md)). The device decodes and
+encodes it to `session.m4a` immediately, showing the same **Finalizing (encode)** amber
+state while it runs, then returns to idle with the session **pending**. **Upload is refused
+while a recording is active** — capture is sacred and the encode holds CPU on the Pi.
+
 ## FR-4: Safe shutdown
 - Holding the button for `shutdown_hold_seconds` (default 3 s) **while idle**
   initiates safe shutdown.

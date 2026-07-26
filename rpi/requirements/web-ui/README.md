@@ -17,6 +17,7 @@ rather than by number.
 | [Play and download](play-and-download.md) | Listen in the browser; download the audio |
 | [Delete a session](delete-session.md) | Remove a session and free the disk, with confirmation |
 | [Recording control](recording-control.md) | Start and stop, shared with the hardware button |
+| [Upload an audio file](upload-audio.md) | Create a session from an existing file, not just live capture |
 | [Transcribe](transcribe.md) | On demand, locally or on a service — always available |
 | [Diarize](diarize.md) | Label who spoke — requires a processing service |
 | [Name the speakers](name-speakers.md) | Put real names on `Speaker N`, per session, after the fact |
@@ -46,6 +47,9 @@ rather than by number.
   registry, no identity carried between recordings.
 - **Sessions are identified by name, not by date.** Identity is the allocated session ID;
   the name is a label on top of it, and the capture date is a scanning convenience only.
+- **A session is created by recording or by upload.** Both allocate an ID and produce the
+  same `session.m4a`; once ingested, an uploaded session is indistinguishable from a recorded
+  one ([upload an audio file](upload-audio.md)). Upload is disabled while recording.
 - **No API keys and no third parties.** There is no cloud path for anything.
 - **The UI is a client of the device's API, not a privileged path**
   ([the HTTP API is the interface](../../adr/http-api-is-the-interface.md)). Every core
