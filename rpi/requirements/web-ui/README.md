@@ -14,6 +14,7 @@ rather than by number.
 |---|---|
 | [Serve over the LAN](serve-over-lan.md) | The UI itself — bound to the Pi's IP, trusted LAN, no auth in v1 |
 | [List sessions](list-sessions.md) | Every session with derived status, identity, duration, size |
+| [View a session](session-detail.md) | Open one session; see its live processing status (queued / processing / failed) |
 | [Play and download](play-and-download.md) | Listen in the browser; download the audio |
 | [Delete a session](delete-session.md) | Remove a session and free the disk, with confirmation |
 | [Recording control](recording-control.md) | Start and stop, shared with the hardware button |

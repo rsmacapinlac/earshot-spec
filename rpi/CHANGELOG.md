@@ -9,6 +9,19 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.3.3] — 2026-07-26
+
+### Fixed
+- **The session view must show live processing status** (`requirements/web-ui/session-detail.md`
+  — new; `specs/api.md`, `requirements/web-ui/README.md`). Fills a gap where a **queued**
+  session displayed nothing while a **running** one showed activity — because the view read
+  device status (`GET /v1/status`, only the one running job) instead of the session's own
+  job. Defines a "View a session" capability whose processing overlay renders **Queued**
+  (with queue position), **Processing** (progress for local, indeterminate for service),
+  and **Failed** (with retry) from `GET /v1/sessions/{id}`'s `job`, updating live over
+  `/v1/events`. Tightens `GET /v1/sessions/{id}` to define the `job` object (which the
+  implementation already returns).
+
 ## [1.3.2] — 2026-07-26
 
 ### Changed

@@ -107,7 +107,26 @@ All sessions, newest id first
   descriptive only.
 
 ### `GET /v1/sessions/{id}`
-One session, with its speaker map and current/last job when relevant. **404** if unknown.
+One session, its `speakers` map, and its current-or-most-recent **`job`** (or `null`).
+**404** if unknown. The `job` is what the session view renders its processing status from
+([view a session](../requirements/web-ui/session-detail.md)) — do not rely on `GET /v1/status`
+for this, which reflects only the one *running* job device-wide and so is empty for a queued
+session.
+
+```json
+{ "id": "rec-000042", "name": "Weekly sync — pricing", "occurred_at": "2026-07-20T14:00",
+  "state": "pending", "created_at": "…", "duration": 1406.1, "size": 5760559,
+  "has_transcript": false, "diarized": false, "speakers": [],
+  "job": { "id": 23, "kind": "transcribe", "route": "service",
+           "state": "queued", "stage": null, "progress": null,
+           "attempts": 0, "last_error": null,
+           "enqueued_at": "…", "started_at": null, "finished_at": null } }
+```
+
+- `job.state` is `queued`, `running`, `done`, `failed`, or `cancelled`. Queue **position**
+  for a `queued` job is derived from the ordered [`GET /v1/jobs`](#get-v1jobs).
+- `stage` / `progress` are populated only for a running **local** job; a **service** job
+  reports neither (render an indeterminate Processing state).
 
 ### `PATCH /v1/sessions/{id}`
 Set or clear the **name** ([name a session](../requirements/web-ui/name-session.md)) and/or
