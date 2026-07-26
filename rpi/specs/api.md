@@ -225,10 +225,14 @@ running **local** job may carry both.
 One job. **404** if unknown.
 
 ### `DELETE /v1/jobs/{id}`
-Cancel. A `queued` job is dropped; a `running` local job is terminated
+Cancel a job the user no longer wants ([cancel a job](../requirements/web-ui/cancel-a-job.md)),
+`queued` or `running`. A `queued` job is dropped; a `running` local job is terminated
 ([job execution](../adr/job-execution.md)); a `running` service job is abandoned by the
-device — it stops waiting on the connection. The stateless service cannot be cancelled, so
-it finishes the in-flight `/asr` call and discards the result. **204**.
+device — it stops waiting on the connection (the stateless service cannot be cancelled, so it
+finishes the in-flight `/asr` call and discards the result). The job ends in the terminal
+`cancelled` state and the session returns to **pending** — it is **not** requeued (unlike
+[preemption](processing.md#preemption)). Idempotent: **204** whether the job was queued,
+running, terminal, or already gone.
 
 ## Processing service
 

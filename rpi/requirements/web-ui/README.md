@@ -20,6 +20,7 @@ rather than by number.
 | [Upload an audio file](upload-audio.md) | Create a session from an existing file, not just live capture |
 | [Transcribe](transcribe.md) | On demand, locally or on a service — always available |
 | [Diarize](diarize.md) | Label who spoke — requires a processing service |
+| [Cancel a job](cancel-a-job.md) | Cancel a queued or running transcription/diarization job |
 | [Name the speakers](name-speakers.md) | Put real names on `Speaker N`, per session, after the fact |
 | [Device status](device-status.md) | Live mirror of what the LED is showing |
 | [Name a session](name-session.md) | An optional human label on top of the session ID |

@@ -71,8 +71,13 @@ all at once and the worker drains them.
   transcribe it. Processing is opt-in per session — the device does not spend 20–35 minutes
   of local CPU (or a diarization) on a recording nobody asked to transcribe.
 - Diarize does not require a prior transcript — it produces one.
-- A `queued` job can be **cancelled** outright. A `running` one follows the
-  [preemption](#preemption) rules.
+- **A job can be cancelled by the user** from the web UI
+  ([cancel a job](../requirements/web-ui/cancel-a-job.md)), whether `queued` or `running`. A
+  `queued` job is dropped; a `running` one is stopped (local inference terminated, a service
+  request abandoned). Either way it ends in the terminal `cancelled` state and the session
+  returns to **pending** — it is **not** requeued. This is distinct from
+  [preemption](#preemption), where a recording stops a *local* job but **requeues** it,
+  because the user still wants that transcript.
 
 ## FR-15: Process — local
 

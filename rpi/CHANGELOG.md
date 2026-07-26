@@ -9,6 +9,17 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.3.1] — 2026-07-26
+
+### Fixed
+- **Define "cancel a job" in the web UI** (`requirements/web-ui/cancel-a-job.md` — new;
+  `specs/api.md`, `specs/processing.md`, `requirements/web-ui/{README,transcribe}.md`). Fills
+  a requirement gap: `DELETE /v1/jobs/{id}` already backed cancellation but no capability
+  named the user-facing action. A **queued or running** job can be cancelled; it ends in the
+  terminal `cancelled` state and the session returns to **pending** — deliberately **not**
+  requeued, which distinguishes a user cancel from *preemption* (a recording stopping a local
+  job, which requeues it).
+
 ## [1.3] — 2026-07-26
 
 ### Added

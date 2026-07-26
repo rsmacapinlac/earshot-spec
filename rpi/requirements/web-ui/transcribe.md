@@ -20,6 +20,8 @@ there instead — much faster — but removing the service falls back rather tha
 - **Retry** enqueues a fresh job for a session whose previous one exhausted its attempts.
 - A "transcribe all" action enqueues every pending session at once; the worker drains them
   one at a time, oldest first. The UI can show what is queued, not only what is running.
+- **Any job can be cancelled** from the queue, whether queued or running
+  ([cancel a job](cancel-a-job.md)) — distinct from the automatic cancellation below.
 
 A local transcription is **cancelled** if a recording starts, because it holds CPU on the
 capturing machine; a service job is not
