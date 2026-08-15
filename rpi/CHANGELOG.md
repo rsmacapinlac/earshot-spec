@@ -9,6 +9,24 @@ a whole; the current version is recorded in `../AGENTS.md`. Dates are ISO-8601
 
 _Nothing yet._
 
+## [1.3.4] — 2026-08-15
+
+### Fixed
+- **A speaker voice sample must be representative, replaceable, and shown with its words**
+  (`requirements/web-ui/name-speakers.md`, `specs/api.md`). The requirement asked only for
+  "a sample clip of that voice" and the API for "a short audio sample", leaving selection
+  undefined — so the implementation picked each speaker's **longest** turn and played its
+  first 6 s, with no text and no alternative. Longest selects for exactly the wrong thing:
+  turns grow long through rambling, stutter, or merged noise, and observed picks included
+  a turn reading `"if we can, if we can, if we can, …"`. Defines voice samples as **up to 5
+  candidate turns per label**, returned by `GET /v1/sessions/{id}/speakers` with their text
+  and timestamps, selected by an explicit filter-and-rank (minimum 2 s, drop low
+  distinct-word-ratio turns, rank toward 4 s, spread across the session, always fall back
+  to something). `GET .../sample` gains **`n`** to play a chosen candidate, so a poor first
+  clip is no longer a dead end, and carries each candidate's text so a client need never
+  offer audio alone. Requires one-at-a-time playback, and bounds the clip to the turn's
+  end — closing a case where a sub-1 s turn's clip ran on into the **next speaker's** audio.
+
 ## [1.3.3] — 2026-07-26
 
 ### Fixed

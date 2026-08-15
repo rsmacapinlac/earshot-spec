@@ -173,16 +173,55 @@ Only meaningful for a diarized session
 ([name the speakers](../requirements/web-ui/name-speakers.md)).
 
 ### `GET /v1/sessions/{id}/speakers`
-The detected labels and any assigned names:
+The detected labels, any assigned names, and each label's **voice samples** — the candidate
+turns the UI offers for listening:
 
 ```json
-{ "speakers": [ { "label": "Speaker 1", "name": "Ritchie", "segments": 14 },
-                { "label": "Speaker 2", "name": null,       "segments": 9 } ] }
+{ "speakers": [
+    { "label": "Speaker 1", "name": "Ritchie", "segments": 14,
+      "samples": [ { "start": 61.2,  "end": 66.4, "text": "No, because I think it was ten bucks." },
+                   { "start": 402.7, "end": 407.0, "text": "Right, and that's the piece I'd push back on." } ] },
+    { "label": "Speaker 2", "name": null, "segments": 9, "samples": [ ] } ] }
 ```
 
+- `samples` is ordered by `start` and holds **at most 5** turns. A sample's position in this
+  array is the `n` taken by the sample endpoint below.
+- `text` is that turn's transcript text, so a client can show what a sample says rather than
+  offering audio alone
+  ([name the speakers](../requirements/web-ui/name-speakers.md#hearing-a-voice)).
+- `samples` is `[]` only when the label has no turns at all.
+
+**Choosing the samples.** Candidates are that label's turns, filtered and ranked so the UI
+offers a *representative* voice rather than an outlier:
+
+1. **Drop turns shorter than 2 s** — too little audio to place a voice.
+2. **Drop degenerate turns** — those whose distinct-word count over total-word count is
+   below `0.5`. This is the shape of a transcriber stutter artifact
+   (`"if we can, if we can, if we can, …"`), which is unusable as a sample and which a
+   longest-turn rule selects for.
+3. **Rank the rest by how close the turn's duration is to 4 s.** Longer is not better; a
+   30 s turn truncated to its first 6 s is usually its least characteristic part.
+4. **Spread the picks.** Take them in rank order, skipping any turn that starts within 60 s
+   of one already taken, until 5 are held or candidates run out. Relax the 60 s spacing if
+   fewer than 2 would otherwise be found.
+5. **Never return nothing.** If every turn is filtered out, fall back to the label's single
+   longest turn, so any label with turns offers at least one sample.
+
+Selection is deterministic from the current transcript, so `n` is stable until the session
+is re-transcribed.
+
 ### `GET /v1/sessions/{id}/speakers/{label}/sample`
-A short audio sample of that voice, drawn from the session, for the user to listen to
-before naming. `Content-Type: audio/mp4`.
+The audio of one of that label's samples, for the user to listen to before naming.
+`Content-Type: audio/mp4`.
+
+- **`n`** (query, default `0`) selects the entry at that index in the label's `samples`.
+  **404** for a label with no turns, or an `n` past the end of the array.
+- The clip is exactly `[start, min(end, start + 6 s)]` of that turn. **It never runs past
+  the turn's end**, so a sample can never contain a second voice — including for a turn
+  shorter than the minimum clip length.
+- **Cacheable** — `ETag` plus `Cache-Control: private`, the validator changing only when the
+  transcript does. Each request is otherwise a fresh ffmpeg cut, and the UI replays samples
+  freely while naming.
 
 ### `PUT /v1/sessions/{id}/speakers/{label}`
 Assign or clear a name: `{ "name": "Ritchie" }` or `{ "name": null }`. Substituted into
